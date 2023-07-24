@@ -33,6 +33,7 @@ async def on_ready():
 async def setup_hook():
     await bot.setup()
     await bot.load_extension('cogs.phrases')
+    await bot.load_extension('cogs.reactions')
 
 @bot.event
 async def on_message(message: discord.Message):
@@ -82,40 +83,6 @@ async def on_guild_emojis_update(guild: discord.Guild, before: tuple[discord.Emo
                 await bot.db_manager.rename_reaction_records(e1.name, e2.name)
 
 
-# === Slash commands ===
-
-@bot.tree.command(
-    name='stats',
-    description='Show emoji reaction stats'
-)
-async def stats_slash(interaction: discord.Interaction, user: discord.User = None, limit: int = 10):
-    if user is None:
-        # stats based on all users
-        res = await bot.db_manager.get_stats(
-            limit=limit
-        )
-    else:
-        # stats based on the specified user
-        res = await bot.db_manager.get_stats(
-            member_id=user.id,
-            limit=limit
-        )
-
-    if not res:
-        await interaction.response.send_message('No reactions recorded for that user')
-    else:    
-        msg = format_stats(interaction, res)
-        await interaction.response.send_message(msg)
-
-# @bot.tree.command(
-#     name='optout',
-#     description='Opt out of the bot\'s tracking'
-# )
-# async def optout(interaction: discord.Interaction):
-#     await bot.db_manager.add_to_opt_out_list(interaction.user)
-
-
-
 # === Text commands ===
 
 @bot.command()
@@ -133,19 +100,6 @@ async def sync(ctx):
 @bot.command()
 async def ping(ctx):
     await ctx.send(f'Pong! ({round(bot.latency * 1000)} ms)')
-
-
-def format_stats(ctx, lst: list[tuple[str, int]]):
-    lines = []
-    for emoji_name, count in lst:
-        parsed_emoji = emoji_name
-        if emojilib.is_custom_emoji(emoji_name):
-            e = discord.utils.find(lambda x: x.name == emoji_name, ctx.guild.emojis)
-            if e is not None and e.is_usable:
-                parsed_emoji = str(e)
-        lines.append(f'{parsed_emoji}: {count}')
-
-    return '\n'.join(lines)
 
 
 # === Tasks (crewmate from among us reference) ===
