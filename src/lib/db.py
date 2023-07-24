@@ -212,22 +212,9 @@ class Manager:
                     phrases.c.phrase == phrase
                 )
             )
-            #         phrases.c.vanity_name, 
-            #         sa.func.coalesce(subquery.c.count, literal(0)).label('count')
-            #     ])
-            #     .select_from(
-            #         phrase_usage.join(phrases, phrases.c.phrase == phrase_usage.c.phrase)
-            #     )
-            #     .where(phrase_usage.c.member_id == member_id)
-            #     .where(phrase_usage.c.phrase == phrase)
-                
-            # )
             res = await conn.execute(stmt)
             rows = await res.fetchall()
             return [x.as_tuple() for x in rows]
-            # row = await res.first()
-            # return row.as_tuple()
-
 
 
     async def ping(self):
