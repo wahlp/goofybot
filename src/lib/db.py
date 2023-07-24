@@ -157,7 +157,7 @@ class Manager:
                 result = await conn.execute(upsert_stmt)
                 await transaction.commit()
 
-        return result
+        return result.rowcount
 
     async def delete_tracked_phrase(self, phrase: str):
         async with self.engine.acquire() as conn:
@@ -170,7 +170,7 @@ class Manager:
                 result = await conn.execute(stmt)
                 await transaction.commit()
 
-        return result        
+        return result.rowcount        
 
     # === phrase_usage ===
 

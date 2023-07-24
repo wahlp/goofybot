@@ -94,7 +94,6 @@ async def sync(ctx):
     # synced_commands = await bot.tree.sync()
     print(synced_commands)
 
-
     await ctx.send('Command tree synced')
 
 @bot.command()
