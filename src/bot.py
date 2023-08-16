@@ -5,9 +5,7 @@ from datetime import datetime, timezone, timedelta
 import discord
 from discord.ext import commands, tasks
 
-from lib import db, emojilib
-from lib.custombot import CustomBot
-
+from lib.envloader import load_env_vars
 
 logging.Formatter.converter = lambda *args: datetime.now(tz=timezone(timedelta(hours=8))).timetuple()
 logging.basicConfig(
@@ -16,6 +14,16 @@ logging.basicConfig(
 )
 logger = logging.getLogger('discord')
 logger.setLevel(logging.INFO)
+
+if os.getenv('ENVIRONMENT') != 'LOCAL':
+    logger.info('loading parameter store values')
+    load_env_vars()
+else:
+    logger.info('assuming environment variables are already set')
+
+
+from lib import db, emojilib
+from lib.custombot import CustomBot
 
 
 target_channel = int(os.getenv('TARGET_CHANNEL'))
@@ -105,7 +113,7 @@ async def ping(ctx):
 
 @tasks.loop(hours=4)
 async def ping_db():
-    logging.info('pinging db')
+    logger.info('pinging db')
     db.ping()
 
 
