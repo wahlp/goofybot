@@ -24,9 +24,9 @@ class PhrasesCog(commands.GroupCog, name="phrases"):
 
     @discord.app_commands.command(
         name='update',
-        description='Add or modify a tracked phrase'
+        description='Add or modify a tracked phrase (Admin only)'
     )
-    @commands.is_owner()
+    @discord.app_commands.checks.has_permissions(administrator=True)
     async def phrases_add(self, interaction: discord.Interaction, phrase: str, vanity_name: str):
         result = await self.bot.db_manager.upsert_tracked_phrase(phrase, vanity_name)
         if result:
@@ -48,10 +48,10 @@ class PhrasesCog(commands.GroupCog, name="phrases"):
     
     @discord.app_commands.command(
         name='delete',
-        description='Delete a tracked phrase'
+        description='Delete a tracked phrase (Admin only)'
     )
     @discord.app_commands.autocomplete(vanity_name=vanity_name_autocomplete)
-    @commands.is_owner()
+    @discord.app_commands.checks.has_permissions(administrator=True)
     async def phrases_delete(self, interaction: discord.Interaction, vanity_name: str):
         phrase, _ = self.find_phrase_tuple(vanity_name=vanity_name)
         result = await self.bot.db_manager.delete_tracked_phrase(phrase)
@@ -90,6 +90,16 @@ class PhrasesCog(commands.GroupCog, name="phrases"):
             await interaction.response.send_message(
                 "No data found (You queried for a phrase that isn't registered)"
             )
+
+    @phrases_add.error
+    async def add_error(self, interaction: discord.Interaction, error):
+        if isinstance(error, discord.app_commands.errors.MissingPermissions):
+            await interaction.response.send_message("You do not have the required permissions", ephemeral=True)
+
+    @phrases_delete.error
+    async def delete_error(self, interaction: discord.Interaction, error):
+        if isinstance(error, discord.app_commands.errors.MissingPermissions):
+            await interaction.response.send_message("You do not have the required permissions", ephemeral=True)
 
 async def setup(bot: commands.Bot) -> None:
   await bot.add_cog(PhrasesCog(bot))
