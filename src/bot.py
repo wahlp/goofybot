@@ -120,7 +120,7 @@ async def ping(ctx):
 @tasks.loop(hours=4)
 async def ping_db():
     logger.info('pinging db')
-    db.ping()
+    await bot.db_manager.ping()
 
 
 if __name__ == '__main__':
