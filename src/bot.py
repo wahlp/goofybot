@@ -42,6 +42,7 @@ async def setup_hook():
     await bot.setup()
     await bot.load_extension('cogs.phrases')
     await bot.load_extension('cogs.reactions')
+    ping_db.start()
 
 @bot.event
 async def on_message(message: discord.Message):
