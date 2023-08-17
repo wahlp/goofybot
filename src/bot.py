@@ -26,7 +26,12 @@ from lib import db, emojilib
 from lib.custombot import CustomBot
 
 
-target_channel = int(os.getenv('TARGET_CHANNEL'))
+target_channels = os.getenv('TARGET_CHANNEL')
+if target_channels is None:
+    logger.warning('target_channels not found')
+    bot_reaction_channel_whitelist = []
+else:
+    bot_reaction_channel_whitelist = [int(x) for x in target_channels.split(',')]
 
 bot = CustomBot()
 
@@ -48,7 +53,7 @@ async def setup_hook():
 async def on_message(message: discord.Message):
     if message.author != bot.user:
         # only let the bot react in one channel or it would get annoying fast
-        if message.channel.id == target_channel:
+        if message.channel.id in bot_reaction_channel_whitelist:
             emoji_list = emojilib.get_relevant_emojis(message.content)
             for emoji in emoji_list:
                 await message.add_reaction(emoji)
