@@ -8,8 +8,11 @@ from src.lib import emojilib
         ("im in it", ["🇮🇲", "🇮🇳", "🇮🇹"]),
         ("us fr", ["🇺🇸", "🇫🇷"]),
         ("amongus", []),
-        ("im not in vc", ["🇮🇳", "🇻🇨"]),
-        ("im up but no one else is", [])
+        ("im not in vc", []),
+        ("im up but no one else is", []),
+        ("my name is in it", ["🇮🇸", "🇮🇳", "🇮🇹"]),
+        ("what is cunny?", ["🦀"]),
+        ("i forgor", ["💀"]),
     ]
 )
 def test_get_relevant_emojis(test_input, expected):

@@ -258,15 +258,16 @@ custom_mapping = {
     "hungy": "🇭🇺",
 }
 
-# todo: implement
-# # will always appear as reaction even if no other checks pass (like number of relevant emojis found)
-# always_appear_mapping = {
-#     "forgor": "💀",
-#     "meow": "🐱",
-# }
 
 def uppercase_dict_keys(d: dict):
     return {key.upper(): value for key, value in d.items()}
+
+# will always appear as reaction even if no other checks pass (like number of relevant emojis found)
+always_appear_mapping = uppercase_dict_keys({
+    "forgor": "💀",
+    "meow": "🐱",
+    "cunny": "🦀"
+})
 
 combined_mapping = {
     **flag_mapping, 
@@ -275,47 +276,63 @@ combined_mapping = {
 
 
 def get_relevant_emojis(text: str, contiguous_mode = True):
-    emoji_sequence = find_matches(text, combined_mapping)
+    emoji_sequence_filterable = find_matches(text, combined_mapping, True)
+    emoji_sequence_unfilterable = find_matches(text, always_appear_mapping, False)
+
+    emoji_sequence = sorted(
+        (*emoji_sequence_filterable, *emoji_sequence_unfilterable),
+        key=lambda x: x[1]
+    )
 
     if contiguous_mode:
         relevant = []
         if len(emoji_sequence) == 1:
-            relevant = [emoji_sequence[0][0]]
+            relevant = [emoji_sequence[0]]
         else:
-            for i, (emoji, match_index) in enumerate(emoji_sequence):
-                # not the last element, compare to next element
-                if i < len(emoji_sequence) - 1:
-                    if match_index == emoji_sequence[i + 1][1] - 1:
-                        relevant.append(emoji)
-                        continue
+            # only include if there is a neighbouring reactable word
+            # or it came from an unfilterable match
+            for i, tup in enumerate(emoji_sequence):
+                emoji, match_index, filterable = tup
+                if not filterable:
+                    relevant.append(tup)
+                else:
+                    # not the last element, compare to next element
+                    # keep if the next word was also a match
+                    if i < len(emoji_sequence) - 1:
+                        if match_index == emoji_sequence[i + 1][1] - 1:
+                            relevant.append(tup)
+                            continue
 
-                # not the first element, compare to previous element
-                if i > 0:
-                    if match_index == emoji_sequence[i - 1][1] + 1:
-                        relevant.append(emoji)
-                        continue
+                    # not the first element, compare to previous element
+                    # keep if the previous word was also a match
+                    if i > 0:
+                        if match_index == emoji_sequence[i - 1][1] + 1:
+                            relevant.append(tup)
+                            continue
                 
     else:
-        relevant = [x[0] for x in emoji_sequence]
+        # relevant = [x[0] for x in emoji_sequence]
+        relevant = emoji_sequence
     
     if (
         len(relevant) >= 3
         or len(relevant) == len(text.split(' '))
     ):
-        return relevant
+        # return relevant
+        return [x[0] for x in relevant]
     else:
-        return []
+        return [x[0] for x in relevant if not x[2]]
 
-def find_matches(text: str, mapping: dict[str, str]):
+def find_matches(text: str, mapping: dict[str, str], filterable: bool):
     text = text.upper()
 
-    emoji_sequence = []
+    emoji_sequence: list[tuple[str, int]] = []
     words = text.split(' ')
     for word_index, word in enumerate(words):
         word = word.upper()
         if word in mapping.keys():
             emoji = mapping[word]
-            emoji_sequence.append((emoji, word_index))
+            emoji_sequence.append((emoji, word_index, filterable))
 
     return emoji_sequence
 
