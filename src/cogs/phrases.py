@@ -20,7 +20,7 @@ class PhrasesCog(commands.GroupCog, name="phrases"):
     )
     async def phrases_get(self, interaction: discord.Interaction):
         msg = '\n'.join(f'{x[0]} ({x[1]})' for x in self.bot.tracked_phrases)
-        await interaction.response.send_message(msg)
+        await interaction.response.send_message(msg, ephemeral=True)
 
     @discord.app_commands.command(
         name='update',
