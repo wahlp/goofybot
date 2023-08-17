@@ -10,9 +10,9 @@ class PhrasesCog(commands.GroupCog, name="phrases"):
 
     def find_phrase_tuple(self, phrase: str = None, vanity_name: str = None):
         if phrase is not None:
-            return next(x for x in self.bot.tracked_phrases if phrase == x[0])
+            return next((x for x in self.bot.tracked_phrases if phrase == x[0]), (None, None))
         if vanity_name is not None:
-            return next(x for x in self.bot.tracked_phrases if vanity_name == x[1])
+            return next((x for x in self.bot.tracked_phrases if vanity_name == x[1]), (None, None))
 
     @discord.app_commands.command(
         name='list',
