@@ -13,6 +13,7 @@ from src.lib import emojilib
         ("my name is in it", ["🇮🇸", "🇮🇳", "🇮🇹"]),
         ("what is cunny?", ["🦀"]),
         ("i forgor", ["💀"]),
+        ("i forgor i was in vc", ["💀", "🇮🇳", "🇻🇨"]),
     ]
 )
 def test_get_relevant_emojis(test_input, expected):
