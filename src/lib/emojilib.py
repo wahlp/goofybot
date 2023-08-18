@@ -23,18 +23,16 @@ combined_mapping = {
 always_appear_mapping = uppercase_dict_keys({
     "forgor": "💀",
     "meow": "🐱",
-    "cunny": "🦀"
+    "cunny": "🦀",
+    "chicken": "🐔"
 })
 
-class WordMatch(NamedTuple):
-    emoji: str 
-    word_index: int
-    filterable: bool
 
-class SubstringMatch(NamedTuple):
+class Match(NamedTuple):
     emoji: str
-    index: int
     filterable: bool
+    index: int
+    word_index: int = -1
 
 def get_relevant_emojis(text: str, contiguous_mode = True):
     text = remove_symbols(text.upper())
@@ -82,12 +80,22 @@ def get_relevant_emojis(text: str, contiguous_mode = True):
         return [x.emoji for x in relevant if not x.filterable]
 
 def find_word_matches(text: str, mapping: dict[str, str], filterable: bool):
-    emoji_sequence: list[WordMatch] = []
+    emoji_sequence: list[Match] = []
     words = text.split(' ')
     for word_index, word in enumerate(words):
         if word in mapping.keys():
             emoji = mapping[word]
-            emoji_sequence.append(WordMatch(emoji, word_index, filterable))
+            index = text.find(word)
+            emoji_sequence.append(Match(emoji, filterable, index, word_index))
+
+    return emoji_sequence
+
+def find_substring_matches(text: str, mapping: dict[str, str], filterable: bool):
+    emoji_sequence: list[Match] = []
+    for trigger, emoji in mapping.items():
+        index = text.find(trigger)
+        if index != -1:
+            emoji_sequence.append(Match(emoji, filterable, index))
 
     return emoji_sequence
 

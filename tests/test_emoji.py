@@ -14,6 +14,7 @@ from src.lib import emojilib
         ("what is cunny?", ["🦀"]),
         ("i forgor", ["💀"]),
         ("i forgor i was in vc", ["💀", "🇮🇳", "🇻🇨"]),
+        ("meowdy", ["🐱"])
     ]
 )
 def test_get_relevant_emojis(test_input, expected):
