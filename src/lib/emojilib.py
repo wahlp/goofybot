@@ -34,7 +34,7 @@ class Match(NamedTuple):
     index: int
     word_index: int = -1
 
-def get_relevant_emojis(text: str, contiguous_mode = True):
+def get_relevant_emojis(text: str):
     text = remove_symbols(text.upper())
 
     emoji_sequence_filterable = find_word_matches(text, combined_mapping, True)
@@ -45,31 +45,28 @@ def get_relevant_emojis(text: str, contiguous_mode = True):
         key=lambda x: x.index
     )
 
-    if contiguous_mode:
-        if len(emoji_sequence) == 1:
-            relevant = [emoji_sequence[0]]
-        else:
-            # only include if there is a neighbouring reactable word
-            # or it came from an unfilterable match
-            relevant = []
-            for i, tup in enumerate(emoji_sequence):
-                if not tup.filterable:
-                    relevant.append(tup)
-                else:
-                    # not the last element, compare to next element
-                    # keep if the next word was also a match
-                    if i < len(emoji_sequence) - 1:
-                        if tup.word_index == emoji_sequence[i + 1].word_index - 1:
-                            relevant.append(tup)
-                            continue
-                    # not the first element, compare to previous element
-                    # keep if the previous word was also a match
-                    if i > 0:
-                        if tup.word_index == emoji_sequence[i - 1].word_index + 1:
-                            relevant.append(tup)
-                            continue
+    if len(emoji_sequence) == 1:
+        relevant = [emoji_sequence[0]]
     else:
-        relevant = emoji_sequence
+        # only include if there is a neighbouring reactable word
+        # or it came from an unfilterable match
+        relevant = []
+        for i, tup in enumerate(emoji_sequence):
+            if not tup.filterable:
+                relevant.append(tup)
+            else:
+                # not the last element, compare to next element
+                # keep if the next word was also a match
+                if i < len(emoji_sequence) - 1:
+                    if tup.word_index == emoji_sequence[i + 1].word_index - 1:
+                        relevant.append(tup)
+                        continue
+                # not the first element, compare to previous element
+                # keep if the previous word was also a match
+                if i > 0:
+                    if tup.word_index == emoji_sequence[i - 1].word_index + 1:
+                        relevant.append(tup)
+                        continue
     
     if (
         len(relevant) >= 3
