@@ -15,6 +15,7 @@ from src.lib import emojilib
         ("i forgor", ["💀"]),
         ("i forgor i was in vc", ["💀", "🇮🇳", "🇻🇨"]),
         ("meowdy", ["🐱"]),
+        ("forgor to meow", ["💀", "🇹🇴", "🐱"]),
         ("you forgor to say meowdy", ["💀", "🐱"]),
         ("https://tenor.com/view/samgyetang-korean-chicken-broth-soup-gif-10392734", ["🐔"])
     ]

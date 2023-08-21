@@ -45,6 +45,21 @@ def get_relevant_emojis(text: str):
         key=lambda x: x.index
     )
 
+    relevant = check_contiguousness(emoji_sequence)
+    
+    if (
+        len(relevant) >= 3
+        or len(relevant) == len(text.split())
+    ):
+        return [x.emoji for x in relevant]
+    else:
+        return [x.emoji for x in relevant if not x.filterable]
+
+
+def check_contiguousness(emoji_sequence: list[Match]):
+    """Infer whether the matched reactions deserved to be acted upon.
+    Based on the adjacency of the words that triggered matches
+    """
     if len(emoji_sequence) == 1:
         relevant = [emoji_sequence[0]]
     else:
@@ -55,30 +70,24 @@ def get_relevant_emojis(text: str):
             if not tup.filterable:
                 relevant.append(tup)
             else:
-                # not the last element, compare to next element
                 # keep if the next word was also a match
                 if i < len(emoji_sequence) - 1:
-                    if tup.word_index == emoji_sequence[i + 1].word_index - 1:
+                    next_tup = emoji_sequence[i + 1]
+                    if tup.word_index == next_tup.word_index - 1:
                         relevant.append(tup)
                         continue
-                # not the first element, compare to previous element
                 # keep if the previous word was also a match
                 if i > 0:
-                    if tup.word_index == emoji_sequence[i - 1].word_index + 1:
+                    prev_tup = emoji_sequence[i - 1]
+                    if tup.word_index == prev_tup.word_index + 1:
                         relevant.append(tup)
                         continue
-    
-    if (
-        len(relevant) >= 3
-        or len(relevant) == len(text.split(' '))
-    ):
-        return [x.emoji for x in relevant]
-    else:
-        return [x.emoji for x in relevant if not x.filterable]
+    return relevant
 
 def find_word_matches(text: str, mapping: dict[str, str], filterable: bool):
     emoji_sequence: list[Match] = []
-    words = text.split(' ')
+    words = text.split()
+
     for word_index, word in enumerate(words):
         if word in mapping.keys():
             emoji = mapping[word]
@@ -89,10 +98,17 @@ def find_word_matches(text: str, mapping: dict[str, str], filterable: bool):
 
 def find_substring_matches(text: str, mapping: dict[str, str], filterable: bool):
     emoji_sequence: list[Match] = []
+    words = text.split()
+
     for trigger, emoji in mapping.items():
         index = text.find(trigger)
         if index != -1:
-            emoji_sequence.append(Match(emoji, filterable, index))
+            word_index = -1
+            for i, word in enumerate(words):
+                if index >= text.find(word) and index < text.find(word) + len(word):
+                    word_index = i
+                    break
+            emoji_sequence.append(Match(emoji, filterable, index, word_index))
 
     return emoji_sequence
 
