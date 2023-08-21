@@ -38,11 +38,11 @@ def get_relevant_emojis(text: str, contiguous_mode = True):
     text = remove_symbols(text.upper())
 
     emoji_sequence_filterable = find_word_matches(text, combined_mapping, True)
-    emoji_sequence_unfilterable = find_word_matches(text, always_appear_mapping, False)
+    emoji_sequence_unfilterable = find_substring_matches(text, always_appear_mapping, False)
 
     emoji_sequence = sorted(
         (*emoji_sequence_filterable, *emoji_sequence_unfilterable),
-        key=lambda x: x[1]
+        key=lambda x: x.index
     )
 
     if contiguous_mode:
