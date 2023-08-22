@@ -25,6 +25,6 @@ phrase_usage = sa.Table(
     os.getenv('TABLE_PHRASE_USAGE'),
     metadata,
     sa.Column('member_id', sa.BigInteger, nullable=False, primary_key=True),
-    sa.Column('phrase', sa.String(128), sa.ForeignKey(f"{os.getenv('TABLE_PHRASES')}.phrase"), nullable=False, primary_key=True,),
-    sa.Column('count', sa.Integer, nullable=False),
+    sa.Column('phrase', sa.String(128), nullable=False, primary_key=True,),
+    sa.Column('count', sa.Integer, default=0, nullable=False),
 )

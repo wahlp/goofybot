@@ -22,3 +22,20 @@ from src.lib import emojilib
 )
 def test_get_relevant_emojis(test_input, expected):
     assert emojilib.get_relevant_emojis(test_input) == expected
+
+@pytest.mark.parametrize(
+    "test_input,expected", 
+    [
+        ([
+            emojilib.Match("💀", False, 0, -1),
+            emojilib.Match("🇹🇴", False, 7, 1),
+            emojilib.Match("🐱", False, 10, -1),
+        ], [
+            emojilib.Match("💀", False, 0, -1),
+            emojilib.Match("🇹🇴", False, 7, 1),
+            emojilib.Match("🐱", False, 10, -1),
+        ]),
+    ]
+)
+def test_check_contiguousness(test_input, expected):
+    assert emojilib.check_contiguousness(test_input) == expected
