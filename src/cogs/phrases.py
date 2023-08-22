@@ -91,15 +91,10 @@ class PhrasesCog(commands.GroupCog, name="phrases"):
                 "No data found (You queried for a phrase that isn't registered)"
             )
 
-    @phrases_add.error
-    async def add_error(self, interaction: discord.Interaction, error):
+    async def cog_app_command_error(self, interaction: discord.Interaction, error):
         if isinstance(error, discord.app_commands.errors.MissingPermissions):
-            await interaction.response.send_message("You do not have the required permissions", ephemeral=True)
+            await interaction.response.send_message("You do not have the required permissions to run this command", ephemeral=True)
 
-    @phrases_delete.error
-    async def delete_error(self, interaction: discord.Interaction, error):
-        if isinstance(error, discord.app_commands.errors.MissingPermissions):
-            await interaction.response.send_message("You do not have the required permissions", ephemeral=True)
 
 async def setup(bot: commands.Bot) -> None:
   await bot.add_cog(PhrasesCog(bot))
