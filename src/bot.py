@@ -101,13 +101,15 @@ async def on_guild_emojis_update(guild: discord.Guild, before: tuple[discord.Emo
 
 @bot.command()
 @commands.is_owner()
-async def sync(ctx):
-    bot.tree.copy_global_to(guild=ctx.guild)
-    synced_commands = await bot.tree.sync(guild=ctx.guild)
-    # bot.tree.clear_commands(guild=None)
-    # synced_commands = await bot.tree.sync()
+async def sync(ctx, mode: str = '*'):
+    if mode == '*':
+        bot.tree.copy_global_to(guild=ctx.guild)
+        synced_commands = await bot.tree.sync(guild=ctx.guild)
+    elif mode == 'd':
+        bot.tree.clear_commands(guild=None)
+        synced_commands = await bot.tree.sync()
+    
     logger.info(f'synced commands: {len(synced_commands)}')
-
     await ctx.send('Command tree synced')
 
 @bot.command()
