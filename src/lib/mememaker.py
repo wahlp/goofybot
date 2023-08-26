@@ -1,6 +1,11 @@
 import textwrap
 from PIL import Image, ImageDraw, ImageFont
 
+# todo: 
+# add transparency support for png
+# add gif support
+# add unicode text support
+
 def draw_multiple_line_text(image_width, text, font, text_color, text_width):
     # https://stackoverflow.com/a/56205095
 
@@ -34,7 +39,7 @@ def add_text_to_image(input_file, text):
     input_img = Image.open(input_file)
 
     fontsize = input_img.width // 10
-    font = ImageFont.truetype("./fonts/Futura Bold Condensed BT.ttf", fontsize)
+    font = ImageFont.truetype("./fonts/caption.otf", fontsize)
     text_color = "black"
     max_line_length = input_img.width // 16
 
