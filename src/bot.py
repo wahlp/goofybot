@@ -47,6 +47,7 @@ async def setup_hook():
     await bot.setup()
     await bot.load_extension('cogs.phrases')
     await bot.load_extension('cogs.reactions')
+    await bot.load_extension('cogs.meme')
     ping_db.start()
 
 @bot.event
