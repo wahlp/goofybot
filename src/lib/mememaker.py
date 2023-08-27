@@ -1,8 +1,9 @@
+import io
 import textwrap
-from PIL import Image, ImageDraw, ImageFont
+
+from PIL import Image, ImageDraw, ImageFont, ImageSequence
 
 # todo: 
-# add gif support
 # add unicode text support
 
 def draw_multiple_line_text(image_width, text, font, text_color, text_width):
@@ -45,5 +46,32 @@ def add_text_to_image(input_file, text):
     output_image.paste(img, (0, 0))
     output_image.paste(input_img, (0, img.height))
 
-    return output_image
+    buffer = io.BytesIO()
+    output_image.save(buffer, format="PNG")
+    buffer.seek(0)
+    return buffer
 
+def add_text_to_gif(input_file, text):
+    input_gif = Image.open(input_file)
+
+    fontsize = input_gif.width // 10
+    font = ImageFont.truetype("./fonts/caption.otf", fontsize)
+    text_color = "black"
+    max_line_length = input_gif.width // 16
+
+    frames: list[Image.Image] = []
+    for frame in ImageSequence.Iterator(input_gif):
+        frame_copy = frame.copy()
+
+        img = draw_multiple_line_text(frame_copy.width, text, font, text_color, text_width=max_line_length)
+
+        output_image = Image.new('RGBA', (frame_copy.width, frame_copy.height + img.height))
+        output_image.paste(img, (0, 0))
+        output_image.paste(frame_copy, (0, img.height))
+        
+        frames.append(output_image)
+    
+    buffer = io.BytesIO()
+    frames[0].save(buffer, format="GIF", save_all=True, append_images=frames[1:], loop=0, duration=input_gif.info['duration'])
+    buffer.seek(0)
+    return buffer

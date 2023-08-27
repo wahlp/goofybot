@@ -30,14 +30,31 @@ class MemeCog(commands.GroupCog, name="meme"):
 
         # format and process the input
         input_file = io.BytesIO(image_data)
-        output_image = mememaker.add_text_to_image(input_file, text)
+        buffer = mememaker.add_text_to_image(input_file, text)
 
         # format and send the output
-        with io.BytesIO() as output:
-            output_image.save(output, format="PNG")
-            output.seek(0)
-            output_file = discord.File(fp=output, filename="funny.png")
-            await interaction.response.send_message(file=output_file)
+        output_file = discord.File(fp=buffer, filename="funny.png")
+        await interaction.response.send_message(file=output_file)
+
+    
+    @discord.app_commands.command(
+        name='gif',
+        description='Add text to gif'
+    )
+    async def gif(self, interaction: discord.Interaction, file_url: str, text: str):
+        # download the input
+        async with aiohttp.ClientSession() as session:
+            async with session.get(file_url) as response:
+                image_data = await response.read()
+
+        # format and process the input
+        input_file = io.BytesIO(image_data)
+        buffer = mememaker.add_text_to_gif(input_file, text)
+
+        # format and send the output
+        output_file = discord.File(fp=buffer, filename="funny.gif")
+        await interaction.response.send_message(file=output_file)
+
 
     async def cog_app_command_error(self, interaction: discord.Interaction, error):
         if isinstance(error.original, UnidentifiedImageError):
