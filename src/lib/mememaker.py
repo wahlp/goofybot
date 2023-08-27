@@ -2,7 +2,6 @@ import textwrap
 from PIL import Image, ImageDraw, ImageFont
 
 # todo: 
-# add transparency support for png
 # add gif support
 # add unicode text support
 
@@ -24,15 +23,12 @@ def draw_multiple_line_text(image_width, text, font, text_color, text_width):
     draw = ImageDraw.Draw(image)
 
     y_text = padding - max(line_heights) // 16
-    # print(f'starting line_height={y_text}')
     for line in lines:
         _, _, line_width, line_height = draw.textbbox((0, 0), line, font=font)
         draw.text(((image_width - line_width) / 2, y_text), 
                   line, font=font, fill=text_color)
         y_text += max(line_heights)
-        # print(f'{y_text=}')
 
-    # print(f'{new_img_height=}')
     return image
 
 def add_text_to_image(input_file, text):
@@ -43,13 +39,11 @@ def add_text_to_image(input_file, text):
     text_color = "black"
     max_line_length = input_img.width // 16
 
-    # print(f'{fontsize=}')
-    # print(f'{max_line_length=}')
-
     img = draw_multiple_line_text(input_img.width, text, font, text_color, text_width=max_line_length)
 
-    output_image = Image.new('RGB', (input_img.width, input_img.height + img.height))
+    output_image = Image.new('RGBA', (input_img.width, input_img.height + img.height))
     output_image.paste(img, (0, 0))
     output_image.paste(input_img, (0, img.height))
 
     return output_image
+
