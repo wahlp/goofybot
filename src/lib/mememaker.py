@@ -49,7 +49,8 @@ def init_text(input_img):
 
     return font, text_color, text_width
 
-def add_text_to_image(input_file, text):
+def add_text_to_image(image_data, text):
+    input_file = io.BytesIO(image_data)
     input_img = Image.open(input_file)
 
     font, text_color, text_width = init_text(input_img)
@@ -60,7 +61,8 @@ def add_text_to_image(input_file, text):
     buffer.seek(0)
     return buffer
 
-def add_text_to_gif(input_file, text):
+def add_text_to_gif(image_data, text):
+    input_file = io.BytesIO(image_data)
     input_gif = Image.open(input_file)
 
     font, text_color, text_width = init_text(input_gif)

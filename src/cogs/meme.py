@@ -8,6 +8,7 @@ from PIL import UnidentifiedImageError
 
 from lib import mememaker
 from lib.custombot import CustomBot
+from lib.net import fetch_data
 
 
 logger = logging.getLogger(__name__)
@@ -23,16 +24,8 @@ class MemeCog(commands.GroupCog, name="meme"):
         description='Add text to image'
     )
     async def image(self, interaction: discord.Interaction, file_url: str, text: str):
-        # download the input
-        async with aiohttp.ClientSession() as session:
-            async with session.get(file_url) as response:
-                image_data = await response.read()
-
-        # format and process the input
-        input_file = io.BytesIO(image_data)
-        buffer = mememaker.add_text_to_image(input_file, text)
-
-        # format and send the output
+        image_data = await fetch_data(file_url)
+        buffer = mememaker.add_text_to_image(image_data, text)
         output_file = discord.File(fp=buffer, filename="funny.png")
         await interaction.response.send_message(file=output_file)
 
@@ -42,16 +35,8 @@ class MemeCog(commands.GroupCog, name="meme"):
         description='Add text to gif'
     )
     async def gif(self, interaction: discord.Interaction, file_url: str, text: str):
-        # download the input
-        async with aiohttp.ClientSession() as session:
-            async with session.get(file_url) as response:
-                image_data = await response.read()
-
-        # format and process the input
-        input_file = io.BytesIO(image_data)
-        buffer = mememaker.add_text_to_gif(input_file, text)
-
-        # format and send the output
+        image_data = await fetch_data(file_url)
+        buffer = mememaker.add_text_to_gif(image_data, text)
         output_file = discord.File(fp=buffer, filename="funny.gif")
         await interaction.response.send_message(file=output_file)
 
