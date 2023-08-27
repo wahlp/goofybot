@@ -32,19 +32,28 @@ def draw_multiple_line_text(image_width, text, font, text_color, text_width):
 
     return image
 
-def add_text_to_image(input_file, text):
-    input_img = Image.open(input_file)
-
-    fontsize = input_img.width // 10
-    font = ImageFont.truetype("./fonts/caption.otf", fontsize)
-    text_color = "black"
-    max_line_length = input_img.width // 16
-
-    img = draw_multiple_line_text(input_img.width, text, font, text_color, text_width=max_line_length)
+def add_caption(input_img, text, font, text_color, text_width):
+    img = draw_multiple_line_text(input_img.width, text, font, text_color, text_width)
 
     output_image = Image.new('RGBA', (input_img.width, input_img.height + img.height))
     output_image.paste(img, (0, 0))
     output_image.paste(input_img, (0, img.height))
+
+    return output_image
+
+def init_text(input_img):
+    fontsize = input_img.width // 10
+    font = ImageFont.truetype("./fonts/caption.otf", fontsize)
+    text_color = "black"
+    text_width = input_img.width // 16
+
+    return font, text_color, text_width
+
+def add_text_to_image(input_file, text):
+    input_img = Image.open(input_file)
+
+    font, text_color, text_width = init_text(input_img)
+    output_image = add_caption(input_img, text, font, text_color, text_width)
 
     buffer = io.BytesIO()
     output_image.save(buffer, format="PNG")
@@ -54,21 +63,12 @@ def add_text_to_image(input_file, text):
 def add_text_to_gif(input_file, text):
     input_gif = Image.open(input_file)
 
-    fontsize = input_gif.width // 10
-    font = ImageFont.truetype("./fonts/caption.otf", fontsize)
-    text_color = "black"
-    max_line_length = input_gif.width // 16
+    font, text_color, text_width = init_text(input_gif)
 
     frames: list[Image.Image] = []
     for frame in ImageSequence.Iterator(input_gif):
         frame_copy = frame.copy()
-
-        img = draw_multiple_line_text(frame_copy.width, text, font, text_color, text_width=max_line_length)
-
-        output_image = Image.new('RGBA', (frame_copy.width, frame_copy.height + img.height))
-        output_image.paste(img, (0, 0))
-        output_image.paste(frame_copy, (0, img.height))
-        
+        output_image = add_caption(frame_copy, text, font, text_color, text_width)
         frames.append(output_image)
     
     buffer = io.BytesIO()
