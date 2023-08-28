@@ -21,24 +21,34 @@ class MemeCog(commands.GroupCog, name="meme"):
 
     @discord.app_commands.command(
         name='image',
-        description='Add text to image'
+        description='Add text to an image'
     )
-    async def image(self, interaction: discord.Interaction, file_url: str, text: str):
-        image_data = await fetch_data(file_url)
-        buffer = mememaker.add_text_to_image(image_data, text)
+    @discord.app_commands.describe(
+        url='The URL of the input image',
+        transparency='Specifies if you want to preserve transparency (Optional, defaults to False)'
+    )
+    async def image(self, interaction: discord.Interaction, url: str, text: str, transparency: bool = False):
+        await interaction.response.defer()
+        image_data = await fetch_data(url)
+        buffer = mememaker.add_text_to_image(image_data, text, transparency)
         output_file = discord.File(fp=buffer, filename="funny.png")
-        await interaction.response.send_message(file=output_file)
-
+        await interaction.followup.send(file=output_file)
     
+
     @discord.app_commands.command(
         name='gif',
-        description='Add text to gif'
+        description='Add text to a gif'
     )
-    async def gif(self, interaction: discord.Interaction, file_url: str, text: str):
-        image_data = await fetch_data(file_url)
-        buffer = mememaker.add_text_to_gif(image_data, text)
+    @discord.app_commands.describe(
+        url='The URL of the input gif',
+        transparency='Specifies if you want to preserve transparency (Optional, defaults to False)'
+    )
+    async def gif(self, interaction: discord.Interaction, url: str, text: str, transparency: bool = False):
+        await interaction.response.defer()
+        image_data = await fetch_data(url)
+        buffer = mememaker.add_text_to_gif(image_data, text, transparency)
         output_file = discord.File(fp=buffer, filename="funny.gif")
-        await interaction.response.send_message(file=output_file)
+        await interaction.followup.send(file=output_file)
 
 
     async def cog_app_command_error(self, interaction: discord.Interaction, error):
