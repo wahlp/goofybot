@@ -44,6 +44,7 @@ class MemeCog(commands.GroupCog, name="meme"):
         transparency: bool = False
     ):
         await interaction.response.defer()
+        logger.info(f'{interaction.user} called for an image with parameters {url=}, {text=}')
 
         if font is None:
             font = font_choices[0]
@@ -74,6 +75,7 @@ class MemeCog(commands.GroupCog, name="meme"):
         transparency: bool = False
     ):
         await interaction.response.defer()
+        logger.info(f'{interaction.user} called for a gif with parameters {url=}, {text=}')
         
         if font is None:
             font = font_choices[0]

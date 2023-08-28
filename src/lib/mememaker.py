@@ -64,9 +64,12 @@ def add_caption(
 
     return output_image
 
-def init_text(input_img: Image.Image, font: str):
+def init_text(input_img: Image.Image, font: str, text: str):
     fontsize = input_img.width // 10
-    text_width = input_img.width // 16
+    text_width = input_img.width // 20
+
+    if len(text) > text_width:
+        fontsize //= 1.2
 
     font = ImageFont.truetype(f'./fonts/{FontOptions[font].value[1]}', fontsize)
     text_color = "black"
@@ -77,7 +80,7 @@ def add_text_to_image(image_data: bytes, text: str, font: str, transparency: boo
     input_file = io.BytesIO(image_data)
     input_img = Image.open(input_file)
 
-    font_object, text_color, text_width = init_text(input_img, font)
+    font_object, text_color, text_width = init_text(input_img, font, text)
     output_image = add_caption(input_img, text, font_object, text_color, text_width, transparency)
 
     buffer = io.BytesIO()
@@ -92,7 +95,7 @@ def add_text_to_gif(image_data: bytes, text: str, font: str, transparency: bool)
     input_file = io.BytesIO(image_data)
     input_gif = Image.open(input_file)
 
-    font_object, text_color, text_width = init_text(input_gif, font)
+    font_object, text_color, text_width = init_text(input_gif, font, text)
 
     frames: list[Image.Image] = []
     for frame in ImageSequence.Iterator(input_gif):
