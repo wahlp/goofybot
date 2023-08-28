@@ -1,10 +1,15 @@
 import io
 import textwrap
+from enum import Enum
 
 from PIL import Image, ImageDraw, ImageFont, ImageSequence
 
 # todo: 
 # add unicode text support
+
+class FontOptions(Enum):
+    default = ("Futura", "caption.otf")
+    comic_sans = ("Comic Sans", "Comic Sans MS Bold.ttf")
 
 def draw_multiple_line_text(
     image_width: int, 
@@ -59,39 +64,40 @@ def add_caption(
 
     return output_image
 
-def init_text(input_img: Image.Image):
+def init_text(input_img: Image.Image, font: str):
     fontsize = input_img.width // 10
-    font = ImageFont.truetype("./fonts/caption.otf", fontsize)
-    text_color = "black"
     text_width = input_img.width // 16
+
+    font = ImageFont.truetype(f'./fonts/{FontOptions[font].value[1]}', fontsize)
+    text_color = "black"
 
     return font, text_color, text_width
 
-def add_text_to_image(image_data: bytes, text: str, transparency: bool):
+def add_text_to_image(image_data: bytes, text: str, font: str, transparency: bool):
     input_file = io.BytesIO(image_data)
     input_img = Image.open(input_file)
 
-    font, text_color, text_width = init_text(input_img)
-    output_image = add_caption(input_img, text, font, text_color, text_width, transparency)
+    font_object, text_color, text_width = init_text(input_img, font)
+    output_image = add_caption(input_img, text, font_object, text_color, text_width, transparency)
 
     buffer = io.BytesIO()
-    img_format = 'PNG' if transparency else 'JPG'
+    img_format = 'PNG' if transparency else 'JPEG'
     output_image.save(buffer, format=img_format)
     buffer.seek(0)
     return buffer
 
-def add_text_to_gif(image_data: bytes, text: str, transparency: bool):
+def add_text_to_gif(image_data: bytes, text: str, font: str, transparency: bool):
     # sort of broken with transparency
     # the frames sequentially get drawn on top of each other without clearing the old ones
     input_file = io.BytesIO(image_data)
     input_gif = Image.open(input_file)
 
-    font, text_color, text_width = init_text(input_gif)
+    font_object, text_color, text_width = init_text(input_gif, font)
 
     frames: list[Image.Image] = []
     for frame in ImageSequence.Iterator(input_gif):
         frame_copy = frame.copy()
-        output_image = add_caption(frame_copy, text, font, text_color, text_width, transparency)
+        output_image = add_caption(frame_copy, text, font_object, text_color, text_width, transparency)
         frames.append(output_image)
     
     buffer = io.BytesIO()

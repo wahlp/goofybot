@@ -14,6 +14,11 @@ from lib.net import fetch_data
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+font_choices = [
+    discord.app_commands.Choice(name=font_file_name.value[0], value=font_file_name.name)
+    for font_file_name in mememaker.FontOptions
+]
+
 class MemeCog(commands.GroupCog, name="meme"):
     def __init__(self, bot: CustomBot):
         self.bot = bot
@@ -27,10 +32,24 @@ class MemeCog(commands.GroupCog, name="meme"):
         url='The URL of the input image',
         transparency='Specifies if you want to preserve transparency (Optional, defaults to False)'
     )
-    async def image(self, interaction: discord.Interaction, url: str, text: str, transparency: bool = False):
+    @discord.app_commands.choices(
+        font=font_choices
+    )
+    async def image(
+        self, 
+        interaction: discord.Interaction, 
+        url: str, 
+        text: str, 
+        font: discord.app_commands.Choice[str] = None, 
+        transparency: bool = False
+    ):
         await interaction.response.defer()
+
+        if font is None:
+            font = font_choices[0]
+
         image_data = await fetch_data(url)
-        buffer = mememaker.add_text_to_image(image_data, text, transparency)
+        buffer = mememaker.add_text_to_image(image_data, text, font.value, transparency)
         output_file = discord.File(fp=buffer, filename="funny.png")
         await interaction.followup.send(file=output_file)
     
@@ -43,10 +62,27 @@ class MemeCog(commands.GroupCog, name="meme"):
         url='The URL of the input gif',
         transparency='Specifies if you want to preserve transparency (Optional, defaults to False)'
     )
-    async def gif(self, interaction: discord.Interaction, url: str, text: str, transparency: bool = False):
+    @discord.app_commands.choices(
+        font=font_choices
+    )
+    async def gif(
+        self, 
+        interaction: discord.Interaction, 
+        url: str, 
+        text: str, 
+        font: discord.app_commands.Choice[str] = None, 
+        transparency: bool = False
+    ):
         await interaction.response.defer()
+        
+        if font is None:
+            font = font_choices[0]
+        
+        if 'tenor.com' in url and not url.endswith('.gif'):
+            url += '.gif'
+        
         image_data = await fetch_data(url)
-        buffer = mememaker.add_text_to_gif(image_data, text, transparency)
+        buffer = mememaker.add_text_to_gif(image_data, text, font.value, transparency)
         output_file = discord.File(fp=buffer, filename="funny.gif")
         await interaction.followup.send(file=output_file)
 
