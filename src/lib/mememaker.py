@@ -1,4 +1,5 @@
 import io
+import logging
 import textwrap
 from enum import Enum
 
@@ -7,29 +8,48 @@ from PIL import Image, ImageDraw, ImageFont, ImageSequence
 # todo: 
 # add unicode text support
 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
 class FontOptions(Enum):
     default = ("Futura", "caption.otf")
     comic_sans = ("Comic Sans", "Comic Sans MS Bold.ttf")
+
+def calc_line_splitting(text, image_width, font):
+    # init starting values for loop
+    pixel_width = image_width
+    max_char_per_line = len(text)
+
+    draw = ImageDraw.Draw(Image.new("RGB", (image_width, 1), "white"))
+
+    lines = textwrap.wrap(text, max_char_per_line)
+    num_words = 0
+    min_side_padding = 10 * 2
+    while pixel_width + min_side_padding > image_width:
+        # calc until we find a limit that fits the image width
+        lines = textwrap.wrap(text, max_char_per_line)
+        pixel_width = max(draw.textbbox((0, 0), line, font=font)[2] for line in lines)
+        max_char_per_line = len(text.rsplit(' ', num_words)[0])
+        num_words += 1
+
+    return lines
 
 def draw_multiple_line_text(
     image_width: int, 
     text: str, 
     font: ImageFont.FreeTypeFont, 
     text_color: str, 
-    text_width: int
 ):
     # https://stackoverflow.com/a/56205095
 
-    padding = 20
+    lines = calc_line_splitting(text, image_width, font)
 
-    image_dummy = Image.new("RGB", (1, 1), "white")
-    draw_dummy = ImageDraw.Draw(image_dummy)
-
-    lines = textwrap.wrap(text, text_width)
     # calculate starting height based on expected space required
-    line_heights = [draw_dummy.textbbox((0, 0), lines[0], font=font)[3] for line in lines ]
-    text_height = sum(line_heights)
+    draw_dummy = ImageDraw.Draw(Image.new("RGB", (1, 1), "white"))
+    line_heights = [draw_dummy.textbbox((0, 0), line, font=font)[3] for line in lines]
+    text_height = max(line_heights) * len(line_heights)
 
+    padding = 20
     new_img_height = text_height + padding * 2
     image = Image.new("RGB", (image_width, new_img_height), "white")
     draw = ImageDraw.Draw(image)
@@ -41,6 +61,9 @@ def draw_multiple_line_text(
                   line, font=font, fill=text_color)
         y_text += max(line_heights)
 
+    if y_text > new_img_height:
+        logger.warning(f'warning: drawn text has exceeded the height of the image. {image_width=}, {lines=}')
+
     return image
 
 def add_caption(
@@ -48,10 +71,9 @@ def add_caption(
     text: str, 
     font: ImageFont.FreeTypeFont, 
     text_color: str, 
-    text_width: int, 
     transparency: bool
 ):
-    img = draw_multiple_line_text(input_img.width, text, font, text_color, text_width)
+    img = draw_multiple_line_text(input_img.width, text, font, text_color)
 
     if transparency:
         mode = 'RGBA'
@@ -64,24 +86,20 @@ def add_caption(
 
     return output_image
 
-def init_text(input_img: Image.Image, font: str, text: str):
-    fontsize = input_img.width // 10
-    text_width = input_img.width // 20
-
-    if len(text) > text_width:
-        fontsize //= 1.2
+def init_font(input_img_width: int, font: str, text: str):
+    fontsize = input_img_width // 10
 
     font = ImageFont.truetype(f'./fonts/{FontOptions[font].value[1]}', fontsize)
     text_color = "black"
 
-    return font, text_color, text_width
+    return font, text_color
 
 def add_text_to_image(image_data: bytes, text: str, font: str, transparency: bool):
     input_file = io.BytesIO(image_data)
     input_img = Image.open(input_file)
 
-    font_object, text_color, text_width = init_text(input_img, font, text)
-    output_image = add_caption(input_img, text, font_object, text_color, text_width, transparency)
+    font_object, text_color = init_font(input_img.width, font, text)
+    output_image = add_caption(input_img, text, font_object, text_color, transparency)
 
     buffer = io.BytesIO()
     img_format = 'PNG' if transparency else 'JPEG'
@@ -95,12 +113,12 @@ def add_text_to_gif(image_data: bytes, text: str, font: str, transparency: bool)
     input_file = io.BytesIO(image_data)
     input_gif = Image.open(input_file)
 
-    font_object, text_color, text_width = init_text(input_gif, font, text)
+    font_object, text_color = init_font(input_gif.width, font, text)
 
     frames: list[Image.Image] = []
     for frame in ImageSequence.Iterator(input_gif):
         frame_copy = frame.copy()
-        output_image = add_caption(frame_copy, text, font_object, text_color, text_width, transparency)
+        output_image = add_caption(frame_copy, text, font_object, text_color, transparency)
         frames.append(output_image)
     
     buffer = io.BytesIO()
