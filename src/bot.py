@@ -22,7 +22,7 @@ else:
     logger.info('assuming environment variables are already set')
 
 
-from lib import db, emojilib
+from lib import emojilib
 from lib.custombot import CustomBot
 
 
@@ -45,9 +45,6 @@ async def on_ready():
 @bot.event
 async def setup_hook():
     await bot.setup()
-    await bot.load_extension('cogs.phrases')
-    await bot.load_extension('cogs.reactions')
-    await bot.load_extension('cogs.meme')
     ping_db.start()
 
 @bot.event
@@ -112,6 +109,13 @@ async def sync(ctx, mode: str = '*'):
     
     logger.info(f'synced commands: {len(synced_commands)}')
     await ctx.send('Command tree synced')
+
+@bot.command()
+@commands.is_owner()
+async def reload(ctx):
+    await bot.reload_cogs()
+    await ctx.send('Reloaded cogs')
+
 
 @bot.command()
 async def ping(ctx):
