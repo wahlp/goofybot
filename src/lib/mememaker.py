@@ -34,7 +34,7 @@ def calc_line_splitting(text, image_width, font):
 
     return lines
 
-def draw_multiple_line_text(
+def draw_text_as_image(
     image_width: int, 
     text: str, 
     font: ImageFont.FreeTypeFont, 
@@ -66,27 +66,23 @@ def draw_multiple_line_text(
 
     return image
 
-def add_caption(
-    input_img: Image.Image, 
-    text: str, 
-    font: ImageFont.FreeTypeFont, 
-    text_color: str, 
+def merge_images(
+    img_above: Image.Image, 
+    img_below: Image.Image,
     transparency: bool
 ):
-    img = draw_multiple_line_text(input_img.width, text, font, text_color)
-
     if transparency:
         mode = 'RGBA'
     else:
         mode = 'RGB'
 
-    output_image = Image.new(mode, (input_img.width, input_img.height + img.height))
-    output_image.paste(img, (0, 0))
-    output_image.paste(input_img, (0, img.height))
+    output_image = Image.new(mode, (img_above.width, img_above.height + img_below.height))
+    output_image.paste(img_above, (0, 0))
+    output_image.paste(img_below, (0, img_above.height))
 
     return output_image
 
-def init_font(input_img_width: int, font: str, text: str):
+def init_font(input_img_width: int, font: str):
     fontsize = input_img_width // 10
 
     font = ImageFont.truetype(f'./fonts/{FontOptions[font].value[1]}', fontsize)
@@ -98,8 +94,9 @@ def add_text_to_image(image_data: bytes, text: str, font: str, transparency: boo
     input_file = io.BytesIO(image_data)
     input_img = Image.open(input_file)
 
-    font_object, text_color = init_font(input_img.width, font, text)
-    output_image = add_caption(input_img, text, font_object, text_color, transparency)
+    font_object, text_color = init_font(input_img.width, font)
+    caption_img = draw_text_as_image(input_img.width, text, font_object, text_color)
+    output_image = merge_images(caption_img, input_img, transparency)
 
     buffer = io.BytesIO()
     img_format = 'PNG' if transparency else 'JPEG'
@@ -113,12 +110,13 @@ def add_text_to_gif(image_data: bytes, text: str, font: str, transparency: bool)
     input_file = io.BytesIO(image_data)
     input_gif = Image.open(input_file)
 
-    font_object, text_color = init_font(input_gif.width, font, text)
+    font_object, text_color = init_font(input_gif.width, font)
+    caption_img = draw_text_as_image(input_gif.width, text, font_object, text_color)
 
     frames: list[Image.Image] = []
     for frame in ImageSequence.Iterator(input_gif):
         frame_copy = frame.copy()
-        output_image = add_caption(frame_copy, text, font_object, text_color, transparency)
+        output_image = merge_images(caption_img, frame_copy, transparency)
         frames.append(output_image)
     
     buffer = io.BytesIO()
