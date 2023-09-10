@@ -44,6 +44,7 @@ class CountersCog(commands.GroupCog, name="counters"):
             msg = f'Counter could not be created, maybe it already exists'
         
         await interaction.response.send_message(msg)
+        await self.bot.fetch_counters()
 
 
     async def name_autocomplete(
@@ -79,8 +80,13 @@ class CountersCog(commands.GroupCog, name="counters"):
             instigator_id = None
             
         await self.bot.db_manager.record_counter_incident(name, instigator_id)
-        count, msg = await self.bot.db_manager.show_counter_value(name)
-        await interaction.response.send_message(msg.format(count))
+        res = await self.bot.db_manager.show_counter_value(name)
+        if res is not None:
+            [[count, msg]] = res
+            await interaction.response.send_message(msg.format(count))
+        else:
+            await interaction.response.send_message('The query yielded no results :sob:')
+
     
 
     @discord.app_commands.command(

@@ -25,14 +25,19 @@ class CustomBot(commands.Bot):
     async def setup(self):
         self.db_manager = db.Manager()
         await self.db_manager.setup()
-        await self.setup_autocomplete_values()
+
+        # setup autocomplete values
+        await self.fetch_phrases()
+        await self.fetch_counters()
         
         for cog_name in get_cogs():
             await self.load_extension(cog_name)
         logger.info('loaded all cogs')
 
-    async def setup_autocomplete_values(self):
+    async def fetch_phrases(self):
         self.tracked_phrases = await self.db_manager.get_tracked_phrases()
+
+    async def fetch_counters(self):
         self.counter_names = await self.db_manager.get_counter_names()
 
     async def reload_cogs(self):

@@ -253,8 +253,8 @@ class Manager:
             )
             res = await conn.execute(stmt)
             
-            async for row in res:
-                return row.as_tuple()
+            rows = await res.fetchall()
+            return [x.as_tuple() for x in rows]
     
     async def show_counter_leaderboards(self, name: str):
         async with self.engine.acquire() as conn:
