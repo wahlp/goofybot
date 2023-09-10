@@ -99,8 +99,12 @@ class CountersCog(commands.GroupCog, name="counters"):
         interaction: discord.Interaction, 
         name: str
     ):
-        count, msg = await self.bot.db_manager.show_counter_value(name)
-        await interaction.response.send_message(msg.format(count))
+        res = await self.bot.db_manager.show_counter_value(name)
+        if res is not None:
+            [[count, msg]] = res
+            await interaction.response.send_message(msg.format(count))
+        else:
+            await interaction.response.send_message('The query yielded no results :sob:')
        
 
 

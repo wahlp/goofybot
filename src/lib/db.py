@@ -241,15 +241,16 @@ class Manager:
             j = sa.join(
                 counters, 
                 counter_incidents, 
-                counters.c.name == counter_incidents.c.name
+                counters.c.name == counter_incidents.c.name,
+                isouter=True
             )
             stmt = (
                 sa.select([
-                    sa.func.count(),
+                    sa.func.count(counter_incidents.c.name),
                     counters.c.message
                 ])
                 .select_from(j)
-                .where(counter_incidents.c.name == name)
+                .where(counters.c.name == name)
             )
             res = await conn.execute(stmt)
             
