@@ -18,19 +18,22 @@ class CustomBot(commands.Bot):
     def __init__(self):
         super().__init__(command_prefix='?', intents=intents)
         self.db_manager = None
+
         self.tracked_phrases = None
+        self.counter_names = None
 
     async def setup(self):
         self.db_manager = db.Manager()
         await self.db_manager.setup()
-        await self.fetch_phrases()
+        await self.setup_autocomplete_values()
         
         for cog_name in get_cogs():
             await self.load_extension(cog_name)
         logger.info('loaded all cogs')
 
-    async def fetch_phrases(self):
+    async def setup_autocomplete_values(self):
         self.tracked_phrases = await self.db_manager.get_tracked_phrases()
+        self.counter_names = await self.db_manager.get_counter_names()
 
     async def reload_cogs(self):
         for cog_name in get_cogs():

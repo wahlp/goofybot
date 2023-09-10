@@ -33,7 +33,7 @@ class PhrasesCog(commands.GroupCog, name="phrases"):
             await interaction.response.send_message(f'Added phrase with vanity name: {vanity_name}')
         else:
             await interaction.response.send_message('Did not add phrase')
-        await self.bot.fetch_phrases()
+        await self.bot.setup_autocomplete_values()
 
     async def vanity_name_autocomplete(
         self,
@@ -59,7 +59,7 @@ class PhrasesCog(commands.GroupCog, name="phrases"):
             await interaction.response.send_message(f'Deleted phrase: {vanity_name}')
         else:
             await interaction.response.send_message('Did not delete phrase')
-        await self.bot.fetch_phrases()
+        await self.bot.setup_autocomplete_values()
     
     @discord.app_commands.command(
         name='stats',

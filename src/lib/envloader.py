@@ -15,6 +15,8 @@ parameter_names = [
     ('/goofybot/db/table/reactions', 'TABLE_REACTIONS'),
     ('/goofybot/db/table/phrases', 'TABLE_PHRASES'),
     ('/goofybot/db/table/phrase_usage', 'TABLE_PHRASE_USAGE'),
+    ('/goofybot/db/table/counters', 'TABLE_COUNTERS'),
+    ('/goofybot/db/table/counter_incidents', 'TABLE_COUNTER_INCIDENTS')
 ]
 
 logger = logging.getLogger(__name__)

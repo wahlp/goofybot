@@ -28,3 +28,18 @@ phrase_usage = sa.Table(
     sa.Column('phrase', sa.String(128), nullable=False, primary_key=True,),
     sa.Column('count', sa.Integer, default=0, nullable=False),
 )
+
+counters = sa.Table(
+    os.getenv('TABLE_COUNTERS'),
+    metadata,
+    sa.Column('name', sa.String(32), nullable=False, primary_key=True),
+    sa.Column('message', sa.String(256), nullable=False)
+)
+
+counter_incidents = sa.Table(
+    os.getenv('TABLE_COUNTER_INCIDENTS'),
+    metadata,
+    sa.Column('name', sa.String(32), nullable=False),
+    sa.Column('instigator', sa.BigInteger, nullable=True),
+    sa.Column('timestamp', sa.TIMESTAMP, nullable=False),
+)

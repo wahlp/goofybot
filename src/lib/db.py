@@ -2,12 +2,13 @@ import asyncio
 import logging
 import os
 import ssl
+import typing
 
 import sqlalchemy as sa
 from sqlalchemy.dialects.mysql import insert
 from aiomysql.sa import create_engine, Engine
 
-from .tables import reactions, phrases, phrase_usage
+from .tables import reactions, phrases, phrase_usage, counters, counter_incidents
 
 
 logger = logging.getLogger(__name__)
@@ -216,6 +217,93 @@ class Manager:
             rows = await res.fetchall()
             return [x.as_tuple() for x in rows]
 
+    # === counters ===
+
+    async def create_counter(self, name: str, message: str):
+        # actually is also able to change the message on existing counters
+        # but im not sure how to rename/split the bot command if this function's name was changed
+        async with self.engine.acquire() as conn:
+            async with conn.begin() as transaction:
+                insert_stmt = insert(counters).values(
+                    name=name,
+                    message=message
+                )
+                upsert_stmt = insert_stmt.on_duplicate_key_update(
+                    message=message
+                )
+                result = await conn.execute(upsert_stmt)
+                await transaction.commit()
+
+        return result.rowcount
+
+    async def show_counter_value(self, name: str):
+        async with self.engine.acquire() as conn:
+            j = sa.join(
+                counters, 
+                counter_incidents, 
+                counters.c.name == counter_incidents.c.name
+            )
+            stmt = (
+                sa.select([
+                    sa.func.count(),
+                    counters.c.message
+                ])
+                .select_from(j)
+                .where(counter_incidents.c.name == name)
+            )
+            res = await conn.execute(stmt)
+            
+            async for row in res:
+                return row.as_tuple()
+    
+    async def show_counter_leaderboards(self, name: str):
+        async with self.engine.acquire() as conn:
+            j = sa.join(
+                counters, 
+                counter_incidents, 
+                counters.c.name == counter_incidents.c.name
+            )
+            stmt = (
+                sa.select([
+                    counter_incidents.c.instigator,
+                    sa.func.count(),
+                    counters.c.message
+                ])
+                .select_from(j)
+                .where(counter_incidents.c.name == name)
+                .group_by(counter_incidents.c.instigator)
+                .order_by(sa.func.count().desc())
+            )
+            res = await conn.execute(stmt)
+            rows = await res.fetchall()
+            
+            return [x.as_tuple() for x in rows]
+
+    async def record_counter_incident(self, counter_name: str, instigator_id: typing.Union[int, None]):
+        async with self.engine.acquire() as conn:
+            async with conn.begin() as transaction:
+                stmt = insert(counter_incidents).values(
+                    name=counter_name,
+                    instigator=instigator_id,
+                    timestamp=sa.func.now()
+                )
+
+                result = await conn.execute(stmt)
+                await transaction.commit()
+
+        return result.rowcount
+        
+    async def get_counter_names(self):
+        async with self.engine.acquire() as conn:
+            stmt = (
+                sa.select([
+                    counters.c.name
+                ])
+            )
+            res = await conn.execute(stmt)
+            rows = await res.fetchall()
+            
+            return [x[0] for x in rows]
 
     async def ping(self):
         async with self.engine.acquire() as conn:

@@ -1,11 +1,14 @@
 import asyncio
 import os
 import ssl
+import sys
 
 import sqlalchemy as sa
 from aiomysql.sa import create_engine
 
-from src.lib.tables import reactions, phrases, phrase_usage
+sys.path.append(os.getcwd())
+
+from src.lib.tables import reactions, phrases, phrase_usage, counters, counter_incidents
 
 async def main():
     ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
@@ -21,7 +24,7 @@ async def main():
     )
 
     async with engine.acquire() as conn:
-        for table in [reactions, phrases, phrase_usage]:
+        for table in [reactions, phrases, phrase_usage, counters, counter_incidents]:
             try:
                 stmt = sa.schema.CreateTable(table)
                 await conn.execute(stmt)
