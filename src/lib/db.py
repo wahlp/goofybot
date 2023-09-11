@@ -257,7 +257,7 @@ class Manager:
             rows = await res.fetchall()
             return [x.as_tuple() for x in rows]
     
-    async def show_counter_leaderboards(self, name: str):
+    async def show_counter_leaderboards(self, name: str, limit: int = 10):
         async with self.engine.acquire() as conn:
             j = sa.join(
                 counters, 
@@ -274,6 +274,7 @@ class Manager:
                 .where(counter_incidents.c.name == name)
                 .group_by(counter_incidents.c.instigator)
                 .order_by(sa.func.count().desc())
+                .limit(limit)
             )
             res = await conn.execute(stmt)
             rows = await res.fetchall()

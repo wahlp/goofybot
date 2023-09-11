@@ -72,9 +72,9 @@ class CountersCog(commands.GroupCog, name="counters"):
         self, 
         interaction: discord.Interaction, 
         name: str,
-        instigator: discord.User = None
+        instigator: discord.Member = None
     ):
-        if isinstance(instigator, discord.User):
+        if isinstance(instigator, discord.Member):
             instigator_id = instigator.id
         else:
             instigator_id = None
@@ -91,7 +91,7 @@ class CountersCog(commands.GroupCog, name="counters"):
 
     @discord.app_commands.command(
         name='show',
-        description='Show the details of a particular counter'
+        description='Show the details of a particular counter, without incrementing it'
     )
     @discord.app_commands.autocomplete(name=name_autocomplete)
     async def show(
@@ -105,8 +105,44 @@ class CountersCog(commands.GroupCog, name="counters"):
             await interaction.response.send_message(msg.format(count))
         else:
             await interaction.response.send_message('The query yielded no results :sob:')
-       
 
+    
+    @discord.app_commands.command(
+        name='leaderboards',
+        description='Show the most common instigators for a counter going up'
+    )
+    @discord.app_commands.autocomplete(name=name_autocomplete)
+    async def leaderboards(
+        self, 
+        interaction: discord.Interaction, 
+        name: str
+    ):
+        res = await self.bot.db_manager.show_counter_leaderboards(name)
+        if res is not None:
+            embed = self.format_leaderboards(res, name)
+            await interaction.response.send_message(embed=embed)
+        else:
+            await interaction.response.send_message('The query yielded no results :sob:')
+
+    def format_leaderboards(self, data: list[int, int], name: str):
+        lines = []
+        for instigator_id, count, _ in data:
+            if instigator_id is None:
+                line = f'no instigator: {count}'
+            else:
+                user = self.bot.get_user(instigator_id)
+                if user is None:
+                    line = f'user with id {instigator_id}: {count}'
+                else:
+                    line = f'{user.mention}: {count}'
+            lines.append(line)
+
+        msg = '\n'.join(lines)
+        embed = discord.Embed(
+            title=f'Leaderboards for counter - {name}',
+            description=msg
+        )
+        return embed
 
 async def setup(bot: commands.Bot) -> None:
   await bot.add_cog(CountersCog(bot))
