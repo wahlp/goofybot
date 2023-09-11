@@ -1,4 +1,8 @@
-todo:
+`.env` requires secrets from:
+- [discord](https://discordpy.readthedocs.io/en/stable/discord.html) 
+- [planetscale](https://planetscale.com/docs/tutorials/connect-any-application)
+
+wishlist:
 - create opt-out feature to exclude users
 
 assumptions:
