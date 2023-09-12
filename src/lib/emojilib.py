@@ -31,7 +31,7 @@ always_appear_mapping = uppercase_dict_keys({
 class Match(NamedTuple):
     emoji: str
     filterable: bool
-    index: int
+    char_index: int
     word_index: int = -1
 
 def get_relevant_emojis(text: str):
@@ -42,7 +42,7 @@ def get_relevant_emojis(text: str):
 
     emoji_sequence = sorted(
         (*emoji_sequence_filterable, *emoji_sequence_unfilterable),
-        key=lambda x: x.index
+        key=lambda x: x.char_index
     )
 
     relevant = check_contiguousness(emoji_sequence)
@@ -87,12 +87,13 @@ def check_contiguousness(emoji_sequence: list[Match]):
 def find_word_matches(text: str, mapping: dict[str, str], filterable: bool):
     emoji_sequence: list[Match] = []
     words = text.split()
-
+    
+    char_index = 0
     for word_index, word in enumerate(words):
-        if word in mapping.keys():
-            emoji = mapping[word]
-            index = text.find(word)
-            emoji_sequence.append(Match(emoji, filterable, index, word_index))
+        emoji = mapping.get(word)
+        if emoji is not None:
+            emoji_sequence.append(Match(emoji, filterable, char_index, word_index))
+        char_index += len(word) + 1
 
     return emoji_sequence
 

@@ -16,8 +16,9 @@ from src.lib import emojilib
         ("i forgor i was in vc", ["💀", "🇮🇳", "🇻🇨"]),
         ("meowdy", ["🐱"]),
         ("forgor to meow", ["💀", "🇹🇴", "🐱"]),
-        ("you forgor to say meowdy", ["💀", "🐱"]),
-        ("https://tenor.com/view/samgyetang-korean-chicken-broth-soup-gif-10392734", ["🐔"])
+        ("you forgor to say meowdy", ["💀", "🇹🇴", "🐱"]),
+        ("https://tenor.com/view/samgyetang-korean-chicken-broth-soup-gif-10392734", ["🐔"]),
+        ("my relatives are over so i have to be in my parent's room", ["🇹🇴", "🇧🇪", "🇮🇳", "🇲🇾"])
     ]
 )
 def test_get_relevant_emojis(test_input, expected):
