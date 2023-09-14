@@ -41,5 +41,6 @@ counter_incidents = sa.Table(
     metadata,
     sa.Column('name', sa.String(32), nullable=False),
     sa.Column('instigator', sa.BigInteger, nullable=True),
+    sa.Column('reporter', sa.BigInteger, nullable=True),
     sa.Column('timestamp', sa.TIMESTAMP, nullable=False),
 )

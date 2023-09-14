@@ -78,8 +78,9 @@ class CountersCog(commands.GroupCog, name="counters"):
             instigator_id = instigator.id
         else:
             instigator_id = None
-            
-        await self.bot.db_manager.record_counter_incident(name, instigator_id)
+        
+        reporter_id = interaction.user.id
+        await self.bot.db_manager.record_counter_incident(name, reporter_id, instigator_id)
         res = await self.bot.db_manager.show_counter_value(name)
         if res is not None:
             [[count, msg]] = res

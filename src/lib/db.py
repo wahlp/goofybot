@@ -281,13 +281,19 @@ class Manager:
             
             return [x.as_tuple() for x in rows]
 
-    async def record_counter_incident(self, counter_name: str, instigator_id: typing.Union[int, None]):
+    async def record_counter_incident(
+        self, 
+        counter_name: str, 
+        reporter_id: int,
+        instigator_id: typing.Union[int, None], 
+    ):
         async with self.engine.acquire() as conn:
             async with conn.begin() as transaction:
                 stmt = insert(counter_incidents).values(
                     name=counter_name,
                     instigator=instigator_id,
-                    timestamp=sa.func.now()
+                    timestamp=sa.func.now(),
+                    reporter=reporter_id
                 )
 
                 result = await conn.execute(stmt)
