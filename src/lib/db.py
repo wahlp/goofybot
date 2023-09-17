@@ -145,6 +145,7 @@ class Manager:
             return [x.as_tuple() for x in rows]
 
     async def upsert_tracked_phrase(self, phrase: str, vanity_name: str):
+        logger.info(f'updating phrase: {phrase=}, {vanity_name=}')
         async with self.engine.acquire() as conn:
             async with conn.begin() as transaction:
                 insert_stmt = insert(phrases).values(
@@ -161,6 +162,7 @@ class Manager:
         return result.rowcount
 
     async def delete_tracked_phrase(self, phrase: str):
+        logger.info(f'deleting phrase: {phrase=}')
         async with self.engine.acquire() as conn:
             async with conn.begin() as transaction:
                 stmt = (
@@ -176,6 +178,7 @@ class Manager:
     # === phrase_usage ===
 
     async def update_tracked_phrase_count(self, member_id: int, phrase: str, num: int):
+        logger.info(f'updating phrase count: {member_id=} {phrase=}, {num=}')
         async with self.engine.acquire() as conn:
             async with conn.begin() as transaction:
                 insert_stmt = insert(phrase_usage).values(
