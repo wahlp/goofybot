@@ -59,6 +59,7 @@ class CountersCog(commands.GroupCog, name="counters"):
         ]
 
     
+    @discord.app_commands.checks.cooldown(1, 30)
     @discord.app_commands.command(
         name='increment',
         description='+1 to a counter'
@@ -89,6 +90,10 @@ class CountersCog(commands.GroupCog, name="counters"):
             await interaction.response.send_message('The query yielded no results :sob:')
 
     
+    @increment.error
+    async def on_test_error(self, interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
+        if isinstance(error, discord.app_commands.CommandOnCooldown):
+            await interaction.response.send_message(str(error), ephemeral=True)
 
     @discord.app_commands.command(
         name='show',
