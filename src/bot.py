@@ -105,7 +105,7 @@ async def sync(ctx, mode: str = '*'):
         synced_commands = await bot.tree.sync(guild=ctx.guild)
     elif mode == 'd':
         bot.tree.clear_commands(guild=None)
-        synced_commands = await bot.tree.sync()
+        synced_commands = await bot.tree.sync(guild=ctx.guild)
     
     logger.info(f'synced commands: {len(synced_commands)}')
     await ctx.send('Command tree synced')
