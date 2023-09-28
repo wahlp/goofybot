@@ -269,13 +269,13 @@ class Manager:
             )
             stmt = (
                 sa.select([
-                    counter_incidents.c.instigator,
+                    sa.func.coalesce(counter_incidents.c.instigator, counter_incidents.c.reporter).label('contributor'),
                     sa.func.count(),
                     counters.c.message
                 ])
                 .select_from(j)
                 .where(counter_incidents.c.name == name)
-                .group_by(counter_incidents.c.instigator)
+                .group_by('contributor')
                 .order_by(sa.func.count().desc())
                 .limit(limit)
             )
