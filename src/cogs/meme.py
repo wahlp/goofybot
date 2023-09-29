@@ -1,6 +1,7 @@
 import aiohttp
 import io
 import logging
+import subprocess
 
 import discord
 from discord.ext import commands
@@ -85,7 +86,20 @@ class MemeCog(commands.GroupCog, name="meme"):
         
         image_data = await fetch_data(url)
         buffer = mememaker.add_text_to_gif(image_data, text, font.value, transparency)
-        output_file = discord.File(fp=buffer, filename="funny.gif")
+        image_bytes = buffer.read()
+
+        
+        cmd = ['gifsicle', '-O3', '--colors', '256', '--lossy=30', '-o', '/dev/stdout', '--', '-']
+        optimized_image = subprocess.run(
+            cmd, 
+            input=image_bytes, 
+            stdout=subprocess.PIPE, 
+            stderr=subprocess.PIPE, 
+            check=True
+        )
+        optimized_image_data = optimized_image.stdout
+        
+        output_file = discord.File(fp=io.BytesIO(optimized_image_data), filename="funny.gif")
         await interaction.followup.send(file=output_file)
 
 

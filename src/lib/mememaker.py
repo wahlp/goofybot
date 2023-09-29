@@ -120,6 +120,14 @@ def add_text_to_gif(image_data: bytes, text: str, font: str, transparency: bool)
         frames.append(output_image)
     
     buffer = io.BytesIO()
-    frames[0].save(buffer, format="GIF", save_all=True, append_images=frames[1:], loop=0, duration=input_gif.info['duration'])
+    frames[0].save(
+        buffer, 
+        format="GIF", 
+        save_all=True, 
+        append_images=frames[1:], 
+        loop=0, 
+        duration=input_gif.info['duration'],
+        optimize=True
+    )
     buffer.seek(0)
     return buffer
