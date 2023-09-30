@@ -1,9 +1,12 @@
 import io
 import logging
+import os
 import textwrap
 from enum import Enum
 
 from PIL import Image, ImageDraw, ImageFont, ImageSequence
+
+from . import net
 
 # todo: 
 # add unicode text support
@@ -125,3 +128,25 @@ def add_text_to_gif(image_data: bytes, text: str, font: str, transparency: bool)
     frames[0].save(buffer, format="GIF", save_all=True, append_images=frames[1:], loop=0, duration=input_gif.info['duration'])
     buffer.seek(0)
     return buffer
+
+
+async def call_api(image_url: str, text: str, font: str, transparency: bool):
+    api_url = os.getenv('IMAGE_API_URL')
+
+    if api_url is None:
+        raise Exception('image API was called but URL was not provided')
+
+    params = {
+        'url': image_url,
+        'text': text,
+        'font': font,
+        'transparency': int(transparency)
+    }
+    response = await net.post_query_string(api_url, params)
+
+    if response['statusCode'] != 200:
+        raise Exception('the API had an error during processing, check its logs')
+
+    output_url = response['body']
+    return output_url
+    
