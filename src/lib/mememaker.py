@@ -1,12 +1,14 @@
 import io
+import json
 import logging
-import os
 import textwrap
 from enum import Enum
 
+import boto3
 from PIL import Image, ImageDraw, ImageFont, ImageSequence
 
-from . import net
+from . import aws
+
 
 # todo: 
 # add unicode text support
@@ -131,22 +133,35 @@ def add_text_to_gif(image_data: bytes, text: str, font: str, transparency: bool)
 
 
 async def call_api(image_url: str, text: str, font: str, transparency: bool):
-    api_url = os.getenv('IMAGE_API_URL')
+    session = boto3.Session()
+    lambda_client = session.client('lambda')
 
-    if api_url is None:
-        raise Exception('image API was called but URL was not provided')
-
-    params = {
-        'url': image_url,
-        'text': text,
-        'font': font,
-        'transparency': int(transparency)
+    event_parameters = {
+        "url": image_url,
+        "text": text,
+        "font": font,
     }
-    response = await net.post_query_string(api_url, params)
 
-    if response['statusCode'] != 200:
-        raise Exception('the API had an error during processing, check its logs')
-
-    output_url = response['body']
-    return output_url
+    logger.info('invoking lambda')
+    lambda_client = aws.LambdaClient()
+    response_payload = await lambda_client.invoke_async(event_parameters)
+    logger.info('lambda response received')
+    lambda_response = json.loads(response_payload)
     
+    logger.info(lambda_response)
+
+    bucket_name = lambda_response['body'].get('bucket_name')
+    object_key = lambda_response['body'].get('file_name')
+
+    logger.info('calling s3')
+    s3_client = session.client('s3')
+    try:
+        response = s3_client.get_object(Bucket=bucket_name, Key=object_key)
+        object_data = response['Body'].read()
+        
+        logger.info(f'received s3 object of size {len(object_data)}')
+
+        buffer = io.BytesIO(object_data)
+        return buffer
+    except Exception as e:
+        print("Error:", e)

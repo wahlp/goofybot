@@ -2,6 +2,7 @@ import aiohttp
 import io
 import logging
 import os
+import traceback
 
 import discord
 from discord.ext import commands
@@ -86,15 +87,17 @@ class MemeCog(commands.GroupCog, name="meme"):
             url += '.gif'
         
         if os.getenv('ENVIRONMENT') == 'LOCAL':
+            logger.info('processing gif locally')
             image_data = await fetch_data(url)
             buffer = mememaker.add_text_to_gif(image_data, text, font.value, transparency)
         else:
+            logger.info('processing gif via API')
             try:
-                output_url = await mememaker.call_api(url, text, font.value, transparency)
-                image_data = await fetch_data(output_url)
+                buffer = await mememaker.call_api(url, text, font.value, transparency)
             except Exception as e:
-                logger.error(e)
-                await interaction.followup.send('Something went wrong with the image API', ephemeral=True)
+                # logger.error(e)
+                traceback.print_exception(type(e), e, e.__traceback__)
+                await interaction.followup.send('Something went wrong with the image API')
                 return
 
         output_file = discord.File(fp=buffer, filename="funny.gif")

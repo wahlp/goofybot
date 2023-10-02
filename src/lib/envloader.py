@@ -8,6 +8,7 @@ ssm = boto3.client('ssm')
 parameter_names = [
     ('/goofybot/discord_token', 'DISCORD_TOKEN'),
     ('/goofybot/target_channel', 'TARGET_CHANNEL'),
+    ('/goofybot/image_api_lambda_name', 'IMAGE_API_LAMBDA_NAME'),
     ('/goofybot/db/host', 'HOST'),
     ('/goofybot/db/username', 'USERNAME'),
     ('/goofybot/db/password', 'PASSWORD'),
