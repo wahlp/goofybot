@@ -10,6 +10,7 @@ import discord
 from discord.ext import commands
 from PIL import UnidentifiedImageError
 
+from lib import aws
 from lib import mememaker
 from lib.custombot import CustomBot
 from lib.net import fetch_data
@@ -129,11 +130,11 @@ class MemeCog(commands.GroupCog, name="meme"):
         else:
             logger.info('processing gif via API')
             try:
-                buffer = await mememaker.call_api(url, text, font.value, transparency)
+                buffer = await aws.invoke_image_processing_lambda(url, text, font.value, transparency)
                 output_file = discord.File(fp=buffer, filename="funny.gif")
                 await interaction.followup.send(file=output_file)
             except (
-                mememaker.APITimeoutError, 
+                aws.APITimeoutError, 
                 botocore.exceptions.ReadTimeoutError
             ) as e:
                 await interaction.followup.send('The API ran out of processing time, the GIF you provided may have been too large in file size')

@@ -1,6 +1,7 @@
 import asyncio
 import concurrent
 import logging
+import io
 import json
 import os
 
@@ -39,3 +40,38 @@ class LambdaClient():
             raise ValueError(f'Lambda invocation failed with response {response}')
         output = response["Payload"].read()
         return output
+    
+
+class APITimeoutError(Exception):
+    pass
+
+async def invoke_image_processing_lambda(image_url: str, text: str, font: str, transparency: bool):
+    session = boto3.Session()
+    lambda_client = session.client('lambda')
+
+    event_parameters = {
+        "url": image_url,
+        "text": text,
+        "font": font,
+    }
+
+    lambda_client = LambdaClient()
+    response_payload = await lambda_client.invoke_async(event_parameters)
+    lambda_response = json.loads(response_payload)
+    logger.info(lambda_response)
+
+    if 'body' not in lambda_response:
+        raise APITimeoutError('The lambda timed out before it could process the GIF')
+
+    bucket_name = lambda_response['body'].get('bucket_name')
+    object_key = lambda_response['body'].get('file_name')
+
+    logger.info('calling s3')
+    s3_client = session.client('s3')
+
+    response = s3_client.get_object(Bucket=bucket_name, Key=object_key)
+    object_data = response['Body'].read()
+    logger.info(f'received s3 object of size {len(object_data)}')
+
+    buffer = io.BytesIO(object_data)
+    return buffer
