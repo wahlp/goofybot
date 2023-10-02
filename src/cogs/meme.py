@@ -58,6 +58,26 @@ class MemeCog(commands.GroupCog, name="meme"):
         output_file = discord.File(fp=buffer, filename="funny.png")
         await interaction.followup.send(file=output_file)
     
+    
+    @discord.app_commands.command(
+        name='size',
+        description='Check the size of an image'
+    )
+    async def size(
+        self, 
+        interaction: discord.Interaction, 
+        url: str
+    ):
+        await interaction.response.defer()
+
+        if 'tenor.com' in url and not url.endswith('.gif'):
+            url += '.gif'
+        
+        data = await fetch_data(url)
+        size_in_kb = len(data) / 1024
+        
+        await interaction.followup.send(f"The size of this image is {size_in_kb:.2f} KB")
+
 
     @discord.app_commands.command(
         name='gif',
