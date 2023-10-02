@@ -117,11 +117,13 @@ class MemeCog(commands.GroupCog, name="meme"):
                 return
             
             output_file = discord.File(fp=buffer, filename="funny.gif")
+            await interaction.followup.send(file=output_file)
 
 
     async def cog_app_command_error(self, interaction: discord.Interaction, error):
         if isinstance(error, discord.app_commands.errors.MissingPermissions):
             await interaction.response.send_message("You do not have the required permissions to run this command", ephemeral=True)
+            return
         if isinstance(error.original, UnidentifiedImageError):
             await interaction.response.send_message("The content at the URL you provided could not be read as an image", ephemeral=True)
         elif isinstance(error.original, aiohttp.InvalidURL):
