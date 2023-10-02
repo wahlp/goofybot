@@ -1,6 +1,7 @@
 import aiohttp
 import io
 import logging
+import subprocess
 import os
 import traceback
 
@@ -90,6 +91,20 @@ class MemeCog(commands.GroupCog, name="meme"):
             logger.info('processing gif locally')
             image_data = await fetch_data(url)
             buffer = mememaker.add_text_to_gif(image_data, text, font.value, transparency)
+            image_bytes = buffer.read()
+
+            cmd = ['gifsicle', '-O3', '--colors', '256', '--lossy=30', '-o', '/dev/stdout', '--', '-']
+            optimized_image = subprocess.run(
+                cmd, 
+                input=image_bytes, 
+                stdout=subprocess.PIPE, 
+                stderr=subprocess.PIPE, 
+                check=True
+            )
+            optimized_image_data = optimized_image.stdout
+            
+            output_file = discord.File(fp=io.BytesIO(optimized_image_data), filename="funny.gif")
+            await interaction.followup.send(file=output_file)
         else:
             logger.info('processing gif via API')
             try:
@@ -99,9 +114,8 @@ class MemeCog(commands.GroupCog, name="meme"):
                 traceback.print_exception(type(e), e, e.__traceback__)
                 await interaction.followup.send('Something went wrong with the image API')
                 return
-
-        output_file = discord.File(fp=buffer, filename="funny.gif")
-        await interaction.followup.send(file=output_file)
+            
+            output_file = discord.File(fp=buffer, filename="funny.gif")
 
 
     async def cog_app_command_error(self, interaction: discord.Interaction, error):
