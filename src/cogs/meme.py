@@ -109,8 +109,9 @@ class MemeCog(commands.GroupCog, name="meme"):
             logger.info('processing gif via API')
             try:
                 buffer = await mememaker.call_api(url, text, font.value, transparency)
+            except mememaker.APITimeoutError as e:
+                await interaction.followup.send('The API timed out, the GIF you provided may have been too large in file size')
             except Exception as e:
-                # logger.error(e)
                 traceback.print_exception(type(e), e, e.__traceback__)
                 await interaction.followup.send('Something went wrong with the image API')
                 return

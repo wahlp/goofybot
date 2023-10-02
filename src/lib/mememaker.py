@@ -137,6 +137,8 @@ def add_text_to_gif(image_data: bytes, text: str, font: str, transparency: bool)
     buffer.seek(0)
     return buffer
 
+class APITimeoutError(Exception):
+    pass
 
 async def call_api(image_url: str, text: str, font: str, transparency: bool):
     session = boto3.Session()
@@ -155,6 +157,9 @@ async def call_api(image_url: str, text: str, font: str, transparency: bool):
     lambda_response = json.loads(response_payload)
     
     logger.info(lambda_response)
+
+    if 'body' not in lambda_response:
+        raise APITimeoutError('The lambda timed out before it could process the GIF')
 
     bucket_name = lambda_response['body'].get('bucket_name')
     object_key = lambda_response['body'].get('file_name')
