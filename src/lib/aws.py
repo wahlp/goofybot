@@ -19,7 +19,8 @@ class LambdaClient():
         )
         client_config = botocore.config.Config(
            max_pool_connections=concurrency,
-           retries={'max_attempts': 0}
+           retries={'max_attempts': 0},
+           read_timeout=120
         )
         self.client = boto3.client('lambda', config=client_config)
     

@@ -137,6 +137,7 @@ class MemeCog(commands.GroupCog, name="meme"):
                 aws.APITimeoutError, 
                 botocore.exceptions.ReadTimeoutError
             ) as e:
+                logger.info('gave up waiting for lambda invocation')
                 await interaction.followup.send('The API ran out of processing time, the GIF you provided may have been too large in file size')
             except Exception as e:
                 traceback.print_exception(type(e), e, e.__traceback__)
