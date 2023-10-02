@@ -5,6 +5,7 @@ import subprocess
 import os
 import traceback
 
+import botocore
 import discord
 from discord.ext import commands
 from PIL import UnidentifiedImageError
@@ -69,7 +70,7 @@ class MemeCog(commands.GroupCog, name="meme"):
     @discord.app_commands.choices(
         font=font_choices
     )
-    @discord.app_commands.checks.has_permissions(administrator=True)
+    @discord.app_commands.checks.cooldown(1, 60)
     async def gif(
         self, 
         interaction: discord.Interaction, 
@@ -109,15 +110,16 @@ class MemeCog(commands.GroupCog, name="meme"):
             logger.info('processing gif via API')
             try:
                 buffer = await mememaker.call_api(url, text, font.value, transparency)
-            except mememaker.APITimeoutError as e:
-                await interaction.followup.send('The API timed out, the GIF you provided may have been too large in file size')
+                output_file = discord.File(fp=buffer, filename="funny.gif")
+                await interaction.followup.send(file=output_file)
+            except (
+                mememaker.APITimeoutError, 
+                botocore.exceptions.ReadTimeoutError
+            ) as e:
+                await interaction.followup.send('The API ran out of processing time, the GIF you provided may have been too large in file size')
             except Exception as e:
                 traceback.print_exception(type(e), e, e.__traceback__)
                 await interaction.followup.send('Something went wrong with the image API')
-                return
-            
-            output_file = discord.File(fp=buffer, filename="funny.gif")
-            await interaction.followup.send(file=output_file)
 
 
     async def cog_app_command_error(self, interaction: discord.Interaction, error):

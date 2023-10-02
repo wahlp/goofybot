@@ -150,12 +150,9 @@ async def call_api(image_url: str, text: str, font: str, transparency: bool):
         "font": font,
     }
 
-    logger.info('invoking lambda')
     lambda_client = aws.LambdaClient()
     response_payload = await lambda_client.invoke_async(event_parameters)
-    logger.info('lambda response received')
     lambda_response = json.loads(response_payload)
-    
     logger.info(lambda_response)
 
     if 'body' not in lambda_response:
@@ -166,13 +163,10 @@ async def call_api(image_url: str, text: str, font: str, transparency: bool):
 
     logger.info('calling s3')
     s3_client = session.client('s3')
-    try:
-        response = s3_client.get_object(Bucket=bucket_name, Key=object_key)
-        object_data = response['Body'].read()
-        
-        logger.info(f'received s3 object of size {len(object_data)}')
 
-        buffer = io.BytesIO(object_data)
-        return buffer
-    except Exception as e:
-        print("Error:", e)
+    response = s3_client.get_object(Bucket=bucket_name, Key=object_key)
+    object_data = response['Body'].read()
+    logger.info(f'received s3 object of size {len(object_data)}')
+
+    buffer = io.BytesIO(object_data)
+    return buffer
