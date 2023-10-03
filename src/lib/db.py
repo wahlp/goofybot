@@ -8,8 +8,7 @@ import sqlalchemy as sa
 from aiomysql.sa import Engine, create_engine
 from sqlalchemy.dialects.mysql import insert
 
-from .tables import (counter_incidents, counters, phrase_usage, phrases,
-                     reactions)
+from .tables import Tables
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -33,6 +32,8 @@ class Manager:
         )
         logger.info('database connection established')
 
+        self.tables = Tables()
+
     # === reactions ===
 
     async def add_reaction_record(self, reaction, member_id, message_id, timestamp):
@@ -40,7 +41,7 @@ class Manager:
 
         async with self.engine.acquire() as conn:
             async with conn.begin() as transaction:
-                insert_stmt = insert(reactions).values(
+                insert_stmt = insert(self.tables.reactions).values(
                     reaction=reaction, 
                     member_id=member_id, 
                     message_id=message_id, 
@@ -60,10 +61,10 @@ class Manager:
         async with self.engine.acquire() as conn:
             async with conn.begin() as transaction:
                 stmt = (
-                    reactions.delete()
-                    .where(reactions.c.reaction == reaction)
-                    .where(reactions.c.member_id == member_id) 
-                    .where(reactions.c.message_id == message_id)
+                    self.tables.reactions.delete()
+                    .where(self.tables.reactions.c.reaction == reaction)
+                    .where(self.tables.reactions.c.member_id == member_id) 
+                    .where(self.tables.reactions.c.message_id == message_id)
                 )
                 await conn.execute(stmt)
                 await transaction.commit()
@@ -74,8 +75,8 @@ class Manager:
         async with self.engine.acquire() as conn:
             async with conn.begin() as transaction:
                 stmt = (
-                    reactions.update()
-                    .where(reactions.c.reaction==reaction_old_name)
+                    self.tables.reactions.update()
+                    .where(self.tables.reactions.c.reaction==reaction_old_name)
                     .values(reaction=reaction_new_name)
                 )
                 await conn.execute(stmt)
@@ -84,11 +85,11 @@ class Manager:
     async def dump(self):
         async with self.engine.acquire() as conn:
             stmt = sa.select([
-                reactions.c.reaction,
-                reactions.c.member_id,
-                reactions.c.message_id,
-                sa.func.convert_tz(reactions.c.timestamp, '+00:00', '+08:00').label('timestamp')
-            ]).order_by(reactions.c.timestamp.desc())
+                self.tables.reactions.c.reaction,
+                self.tables.reactions.c.member_id,
+                self.tables.reactions.c.message_id,
+                sa.func.convert_tz(self.tables.reactions.c.timestamp, '+00:00', '+08:00').label('timestamp')
+            ]).order_by(self.tables.reactions.c.timestamp.desc())
             res = await conn.execute(stmt)
             
             rows = []
@@ -115,7 +116,7 @@ class Manager:
         async with self.engine.acquire() as conn:
             stmt = sa.text(f'''
                 SELECT reaction, COUNT(*) AS count
-                FROM {reactions.name}
+                FROM {self.tables.reactions.name}
                 {where_clause}
                 GROUP BY reaction
                 ORDER BY count DESC
@@ -136,8 +137,8 @@ class Manager:
     async def get_tracked_phrases(self):
         async with self.engine.acquire() as conn:
             stmt = sa.select([
-                phrases.c.phrase,
-                phrases.c.vanity_name,
+                self.tables.phrases.c.phrase,
+                self.tables.phrases.c.vanity_name,
             ])
             res = await conn.execute(stmt)
             rows = await res.fetchall()
@@ -148,7 +149,7 @@ class Manager:
         logger.info(f'updating phrase: {phrase=}, {vanity_name=}')
         async with self.engine.acquire() as conn:
             async with conn.begin() as transaction:
-                insert_stmt = insert(phrases).values(
+                insert_stmt = insert(self.tables.phrases).values(
                     phrase=phrase,
                     vanity_name=vanity_name,
                 )
@@ -166,8 +167,8 @@ class Manager:
         async with self.engine.acquire() as conn:
             async with conn.begin() as transaction:
                 stmt = (
-                    phrases.delete()
-                    .where(phrases.c.phrase == phrase)
+                    self.tables.phrases.delete()
+                    .where(self.tables.phrases.c.phrase == phrase)
                 )
                 
                 result = await conn.execute(stmt)
@@ -181,7 +182,7 @@ class Manager:
         logger.info(f'updating phrase count: {member_id=} {phrase=}, {num=}')
         async with self.engine.acquire() as conn:
             async with conn.begin() as transaction:
-                insert_stmt = insert(phrase_usage).values(
+                insert_stmt = insert(self.tables.phrase_usage).values(
                     member_id=member_id,
                     phrase=phrase,
                     count=num
@@ -189,7 +190,7 @@ class Manager:
                 
                 # update timestamp if the 3-col-unique combo already exists
                 upsert_stmt = insert_stmt.on_duplicate_key_update(
-                    count=phrase_usage.c.count + num
+                    count=self.tables.phrase_usage.c.count + num
                 )
                 await conn.execute(upsert_stmt)
                 await transaction.commit()
@@ -197,23 +198,23 @@ class Manager:
     async def get_tracked_phrase_count(self, member_id: int, phrase: str):
         async with self.engine.acquire() as conn:
             subquery = sa.select([
-                phrase_usage.c.phrase,
-                phrase_usage.c.member_id,
-                phrase_usage.c.count
+                self.tables.phrase_usage.c.phrase,
+                self.tables.phrase_usage.c.member_id,
+                self.tables.phrase_usage.c.count
             ]).where(
-                phrase_usage.c.member_id == member_id
+                self.tables.phrase_usage.c.member_id == member_id
             ).alias()
             
             stmt = (
                 sa.select([                   
-                    phrases.c.vanity_name,
+                    self.tables.phrases.c.vanity_name,
                     sa.func.coalesce(subquery.c.count, sa.literal(0)).label('count')
                 ]).select_from(
-                    phrases.outerjoin(
-                        subquery, phrases.c.phrase == subquery.c.phrase
+                    self.tables.phrases.outerjoin(
+                        subquery, self.tables.phrases.c.phrase == subquery.c.phrase
                     )
                 ).where(
-                    phrases.c.phrase == phrase
+                    self.tables.phrases.c.phrase == phrase
                 )
             )
             res = await conn.execute(stmt)
@@ -223,11 +224,11 @@ class Manager:
     # === counters ===
 
     async def create_counter(self, name: str, message: str):
-        # actually is also able to change the message on existing counters
+        # actually is also able to change the message on existing self.tables.counters
         # but im not sure how to rename/split the bot command if this function's name was changed
         async with self.engine.acquire() as conn:
             async with conn.begin() as transaction:
-                insert_stmt = insert(counters).values(
+                insert_stmt = insert(self.tables.counters).values(
                     name=name,
                     message=message
                 )
@@ -242,18 +243,18 @@ class Manager:
     async def show_counter_value(self, name: str):
         async with self.engine.acquire() as conn:
             j = sa.join(
-                counters, 
-                counter_incidents, 
-                counters.c.name == counter_incidents.c.name,
+                self.tables.counters, 
+                self.tables.counter_incidents, 
+                self.tables.counters.c.name == self.tables.counter_incidents.c.name,
                 isouter=True
             )
             stmt = (
                 sa.select([
-                    sa.func.count(counter_incidents.c.name),
-                    counters.c.message
+                    sa.func.count(self.tables.counter_incidents.c.name),
+                    self.tables.counters.c.message
                 ])
                 .select_from(j)
-                .where(counters.c.name == name)
+                .where(self.tables.counters.c.name == name)
             )
             res = await conn.execute(stmt)
             
@@ -263,18 +264,18 @@ class Manager:
     async def show_counter_leaderboards(self, name: str, limit: int = 10):
         async with self.engine.acquire() as conn:
             j = sa.join(
-                counters, 
-                counter_incidents, 
-                counters.c.name == counter_incidents.c.name
+                self.tables.counters, 
+                self.tables.counter_incidents, 
+                self.tables.counters.c.name == self.tables.counter_incidents.c.name
             )
             stmt = (
                 sa.select([
-                    sa.func.coalesce(counter_incidents.c.instigator, counter_incidents.c.reporter).label('contributor'),
+                    sa.func.coalesce(self.tables.counter_incidents.c.instigator, self.tables.counter_incidents.c.reporter).label('contributor'),
                     sa.func.count(),
-                    counters.c.message
+                    self.tables.counters.c.message
                 ])
                 .select_from(j)
-                .where(counter_incidents.c.name == name)
+                .where(self.tables.counter_incidents.c.name == name)
                 .group_by('contributor')
                 .order_by(sa.func.count().desc())
                 .limit(limit)
@@ -292,7 +293,7 @@ class Manager:
     ):
         async with self.engine.acquire() as conn:
             async with conn.begin() as transaction:
-                stmt = insert(counter_incidents).values(
+                stmt = insert(self.tables.counter_incidents).values(
                     name=counter_name,
                     instigator=instigator_id,
                     timestamp=sa.func.now(),
@@ -308,7 +309,7 @@ class Manager:
         async with self.engine.acquire() as conn:
             stmt = (
                 sa.select([
-                    counters.c.name
+                    self.tables.counters.c.name
                 ])
             )
             res = await conn.execute(stmt)

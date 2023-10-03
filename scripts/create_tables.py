@@ -8,7 +8,7 @@ from aiomysql.sa import create_engine
 
 sys.path.append(os.getcwd())
 
-from src.lib.tables import reactions, phrases, phrase_usage, counters, counter_incidents
+from src.lib.tables import Tables
 
 async def main():
     ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
@@ -23,8 +23,10 @@ async def main():
         ssl=ctx,
     )
 
+    tables = Tables()
+
     async with engine.acquire() as conn:
-        for table in [reactions, phrases, phrase_usage, counters, counter_incidents]:
+        for table in tables.get_all():
             try:
                 stmt = sa.schema.CreateTable(table)
                 await conn.execute(stmt)
