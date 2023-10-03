@@ -1,11 +1,9 @@
 import re
 from typing import NamedTuple
 
-from .countryflags import flag_mapping
+from .flags import load_flag_mapping
 
-
-def uppercase_dict_keys(d: dict):
-    return {key.upper(): value for key, value in d.items()}
+flag_mapping = load_flag_mapping()
 
 custom_mapping = {
     "frfr": "🇫🇷",
@@ -15,17 +13,17 @@ custom_mapping = {
 
 combined_mapping = {
     **flag_mapping, 
-    **uppercase_dict_keys(custom_mapping)
+    **custom_mapping
 }
 
 # will always appear as reaction even if no other checks pass (like number of relevant emojis found)
 # should be checked as substrings and not individual words
-always_appear_mapping = uppercase_dict_keys({
+always_appear_mapping = {
     "forgor": "💀",
     "meow": "🐱",
     "cunny": "🦀",
     "chicken": "🐔"
-})
+}
 
 
 class Match(NamedTuple):
@@ -35,7 +33,7 @@ class Match(NamedTuple):
     word_index: int = -1
 
 def get_relevant_emojis(text: str):
-    text = remove_symbols(text.upper())
+    text = remove_symbols(text.lower())
 
     emoji_sequence_filterable = find_word_matches(text, combined_mapping, True)
     emoji_sequence_unfilterable = find_substring_matches(text, always_appear_mapping, False)
