@@ -1,10 +1,10 @@
-import aiohttp
 import io
 import logging
-import subprocess
 import os
+import subprocess
 import traceback
 
+import aiohttp
 import botocore
 import discord
 from discord.ext import commands

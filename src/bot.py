@@ -1,10 +1,12 @@
 import logging
 import os
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 
 import discord
 from discord.ext import commands, tasks
 
+from lib import emojilib
+from lib.custombot import CustomBot
 from lib.envloader import load_env_vars
 
 logging.Formatter.converter = lambda *args: datetime.now(tz=timezone(timedelta(hours=8))).timetuple()
@@ -20,11 +22,6 @@ if os.getenv('ENVIRONMENT') != 'LOCAL':
     load_env_vars()
 else:
     logger.info('assuming environment variables are already set')
-
-
-from lib import emojilib
-from lib.custombot import CustomBot
-
 
 target_channels = os.getenv('TARGET_CHANNEL')
 if target_channels is None:

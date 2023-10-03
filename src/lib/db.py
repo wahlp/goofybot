@@ -5,11 +5,11 @@ import ssl
 import typing
 
 import sqlalchemy as sa
+from aiomysql.sa import Engine, create_engine
 from sqlalchemy.dialects.mysql import insert
-from aiomysql.sa import create_engine, Engine
 
-from .tables import reactions, phrases, phrase_usage, counters, counter_incidents
-
+from .tables import (counter_incidents, counters, phrase_usage, phrases,
+                     reactions)
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
