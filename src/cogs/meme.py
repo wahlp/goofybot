@@ -96,6 +96,7 @@ class MemeCog(commands.GroupCog, name="meme"):
     @discord.app_commands.describe(
         url='The URL of the input gif',
         compression='Compress the gif for smaller file size at the cost of more processing time (Optional, defaults to True)',
+        speedup='Multiplies the speed of the output gif',
         transparency='Specifies if you want to preserve transparency (Optional, defaults to False)'
     )
     @discord.app_commands.choices(
@@ -108,6 +109,7 @@ class MemeCog(commands.GroupCog, name="meme"):
         url: str, 
         text: str, 
         compression: bool = True,
+        speedup: float = None,
         font: discord.app_commands.Choice[str] = None, 
         transparency: bool = False
     ):  
@@ -125,12 +127,14 @@ class MemeCog(commands.GroupCog, name="meme"):
         if os.getenv('ENVIRONMENT') == 'LOCAL':
             logger.info('processing gif locally')
             image_data = await fetch_data(url)
-            buffer = mememaker.add_text_to_gif(image_data, text, font.value, transparency)
+            buffer = mememaker.add_text_to_gif(image_data, text, font.value, transparency, speedup)
 
             if not compression:
+                logger.info('uploading file to discord without compression')
                 output_file = discord.File(fp=buffer, filename=output_file_name)
             else:
                 image_bytes = buffer.read()
+                logger.info(f'{len(image_bytes)} bytes image to be gifsicle-d')
                 cmd = ['gifsicle', '-O3', '--colors', '256', '--lossy=30', '-o', '/dev/stdout', '--', '-']
                 optimized_image = subprocess.run(
                     cmd, 
@@ -140,6 +144,7 @@ class MemeCog(commands.GroupCog, name="meme"):
                     check=True
                 )
                 optimized_image_data = optimized_image.stdout
+                logger.info('uploading compressed file to discord')
                 output_file = discord.File(fp=io.BytesIO(optimized_image_data), filename=output_file_name)
 
             await interaction.followup.send(file=output_file)

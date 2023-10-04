@@ -105,7 +105,7 @@ def add_text_to_image(image_data: bytes, text: str, font: str, transparency: boo
     buffer.seek(0)
     return buffer
 
-def add_text_to_gif(image_data: bytes, text: str, font: str, transparency: bool):
+def add_text_to_gif(image_data: bytes, text: str, font: str, transparency: bool, custom_speed: float = None):
     # sort of broken with transparency
     # the frames sequentially get drawn on top of each other without clearing the old ones
     input_file = io.BytesIO(image_data)
@@ -115,10 +115,18 @@ def add_text_to_gif(image_data: bytes, text: str, font: str, transparency: bool)
     caption_img = draw_text_as_image(input_gif.width, text, font_object, text_color)
 
     frames: list[Image.Image] = []
+    custom_durations = []
     for frame in ImageSequence.Iterator(input_gif):
         frame_copy = frame.copy()
         output_image = merge_images(caption_img, frame_copy, transparency)
+        if custom_speed is not None:
+            custom_durations.append(frame_copy.info['duration'] / custom_speed)
         frames.append(output_image)
+    
+    if custom_durations:
+        output_frames_durations = custom_durations
+    else:
+        output_frames_durations = input_gif.info['duration']
     
     buffer = io.BytesIO()
     frames[0].save(
@@ -127,7 +135,7 @@ def add_text_to_gif(image_data: bytes, text: str, font: str, transparency: bool)
         save_all=True, 
         append_images=frames[1:], 
         loop=0, 
-        duration=input_gif.info['duration'],
+        duration=output_frames_durations,
         optimize=True
     )
     buffer.seek(0)
