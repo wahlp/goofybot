@@ -135,18 +135,9 @@ class MemeCog(commands.GroupCog, name="meme"):
             else:
                 image_bytes = buffer.read()
                 logger.info(f'{len(image_bytes)} bytes image to be gifsicle-d')
-                cmd = ['gifsicle', '-O3', '--colors', '256', '--lossy=30', '-o', '/dev/stdout', '--', '-']
-                optimized_image = subprocess.run(
-                    cmd, 
-                    input=image_bytes, 
-                    stdout=subprocess.PIPE, 
-                    stderr=subprocess.PIPE, 
-                    check=True
-                )
-                optimized_image_data = optimized_image.stdout
+                optimized_image_data = compress_gif(image_bytes)
                 logger.info('uploading compressed file to discord')
                 output_file = discord.File(fp=io.BytesIO(optimized_image_data), filename=output_file_name)
-
             await interaction.followup.send(file=output_file)
         else:
             logger.info('processing gif via API')
@@ -192,3 +183,16 @@ def create_output_file_name(text: str, ext: str):
     slugified_text = slugify(text, max_length=80, word_boundary=True)
     file_name = f'{slugified_text}-{random_str}.{ext}'
     return file_name
+
+
+def compress_gif(image_bytes: bytes):
+    cmd = ['gifsicle', '-O3', '--colors', '256', '--lossy=30', '-o', '/dev/stdout', '--', '-']
+    optimized_image = subprocess.run(
+        cmd, 
+        input=image_bytes, 
+        stdout=subprocess.PIPE, 
+        stderr=subprocess.PIPE, 
+        check=True
+    )
+    optimized_image_data = optimized_image.stdout
+    return optimized_image_data
