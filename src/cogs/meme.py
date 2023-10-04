@@ -1,7 +1,9 @@
 import io
 import logging
 import os
+import random
 import subprocess
+import string
 import traceback
 
 import aiohttp
@@ -9,6 +11,7 @@ import botocore
 import discord
 from discord.ext import commands
 from PIL import UnidentifiedImageError
+from slugify import slugify
 
 from lib import aws
 from lib import mememaker
@@ -56,7 +59,8 @@ class MemeCog(commands.GroupCog, name="meme"):
 
         image_data = await fetch_data(url)
         buffer = mememaker.add_text_to_image(image_data, text, font.value, transparency)
-        output_file = discord.File(fp=buffer, filename="funny.png")
+        output_file_name = create_output_file_name(text, ext='png')
+        output_file = discord.File(fp=buffer, filename=output_file_name)
         await interaction.followup.send(file=output_file)
     
     
@@ -108,6 +112,8 @@ class MemeCog(commands.GroupCog, name="meme"):
         
         if 'tenor.com' in url and not url.endswith('.gif'):
             url += '.gif'
+            
+        output_file_name = create_output_file_name(text, ext='gif')
         
         if os.getenv('ENVIRONMENT') == 'LOCAL':
             logger.info('processing gif locally')
@@ -125,13 +131,13 @@ class MemeCog(commands.GroupCog, name="meme"):
             )
             optimized_image_data = optimized_image.stdout
             
-            output_file = discord.File(fp=io.BytesIO(optimized_image_data), filename="funny.gif")
+            output_file = discord.File(fp=io.BytesIO(optimized_image_data), filename=output_file_name)
             await interaction.followup.send(file=output_file)
         else:
             logger.info('processing gif via API')
             try:
                 buffer = await aws.invoke_image_processing_lambda(url, text, font.value, transparency)
-                output_file = discord.File(fp=buffer, filename="funny.gif")
+                output_file = discord.File(fp=buffer, filename=output_file_name)
                 await interaction.followup.send(file=output_file)
             except (
                 aws.APITimeoutError, 
@@ -145,18 +151,31 @@ class MemeCog(commands.GroupCog, name="meme"):
 
 
     async def cog_app_command_error(self, interaction: discord.Interaction, error):
-        if isinstance(error, discord.app_commands.errors.MissingPermissions):
-            await interaction.response.send_message("You do not have the required permissions to run this command", ephemeral=True)
+        if isinstance(error, discord.app_commands.AppCommandError):
+            if isinstance(error, discord.app_commands.errors.MissingPermissions):
+                await interaction.response.send_message("You do not have the required permissions to run this command", ephemeral=True)
+            elif isinstance(error, discord.app_commands.errors.CommandOnCooldown):
+                await interaction.response.send_message(str(error), ephemeral=True)
             return
-        if isinstance(error.original, UnidentifiedImageError):
-            await interaction.response.send_message("The content at the URL you provided could not be read as an image", ephemeral=True)
-        elif isinstance(error.original, aiohttp.InvalidURL):
-            await interaction.response.send_message("The URL you provided was invalid", ephemeral=True)
-        else:
-            await interaction.response.send_message("There was an error while running the command", ephemeral=True)
-            # logger.error(error)
-            raise error
+        
+        elif hasattr(error, 'original'):
+            if isinstance(error.original, UnidentifiedImageError):
+                await interaction.response.send_message("The content at the URL you provided could not be read as an image", ephemeral=True)
+            elif isinstance(error.original, aiohttp.InvalidURL):
+                await interaction.response.send_message("The URL you provided was invalid", ephemeral=True)
+            return
+        
+        await interaction.response.send_message("There was an error while running the command", ephemeral=True)
+        raise error
 
 
 async def setup(bot: commands.Bot) -> None:
   await bot.add_cog(MemeCog(bot))
+
+
+def create_output_file_name(text: str, ext: str):
+    # https://stackoverflow.com/questions/13484726/safe-enough-8-character-short-unique-random-string
+    alphabet = string.ascii_lowercase + string.digits
+    random_str = ''.join(random.choices(alphabet, k=8))
+    file_name = f'{slugify(text)}-{random_str}.{ext}'
+    return file_name
