@@ -5,6 +5,7 @@ import random
 import subprocess
 import string
 import traceback
+from typing import Optional
 
 import aiohttp
 import botocore
@@ -83,6 +84,10 @@ class MemeCog(commands.GroupCog, name="meme"):
         
         await interaction.followup.send(f"The size of this image is {size_in_kb:.2f} KB")
 
+    def cooldown_for_everyone_but_me(interaction: discord.Interaction) -> Optional[discord.app_commands.Cooldown]:
+        if str(interaction.user.id) == os.getenv('OWNER_USER_ID'):
+            return None
+        return discord.app_commands.Cooldown(1, 60.0)
 
     @discord.app_commands.command(
         name='gif',
@@ -90,17 +95,19 @@ class MemeCog(commands.GroupCog, name="meme"):
     )
     @discord.app_commands.describe(
         url='The URL of the input gif',
+        compression='Compress the gif for smaller file size at the cost of more processing time (Optional, defaults to True)',
         transparency='Specifies if you want to preserve transparency (Optional, defaults to False)'
     )
     @discord.app_commands.choices(
         font=font_choices
     )
-    @discord.app_commands.checks.cooldown(1, 60)
+    @discord.app_commands.checks.dynamic_cooldown(cooldown_for_everyone_but_me)
     async def gif(
         self, 
         interaction: discord.Interaction, 
         url: str, 
         text: str, 
+        compression: bool = True,
         font: discord.app_commands.Choice[str] = None, 
         transparency: bool = False
     ):  
@@ -119,19 +126,22 @@ class MemeCog(commands.GroupCog, name="meme"):
             logger.info('processing gif locally')
             image_data = await fetch_data(url)
             buffer = mememaker.add_text_to_gif(image_data, text, font.value, transparency)
-            image_bytes = buffer.read()
 
-            cmd = ['gifsicle', '-O3', '--colors', '256', '--lossy=30', '-o', '/dev/stdout', '--', '-']
-            optimized_image = subprocess.run(
-                cmd, 
-                input=image_bytes, 
-                stdout=subprocess.PIPE, 
-                stderr=subprocess.PIPE, 
-                check=True
-            )
-            optimized_image_data = optimized_image.stdout
-            
-            output_file = discord.File(fp=io.BytesIO(optimized_image_data), filename=output_file_name)
+            if not compression:
+                output_file = discord.File(fp=buffer, filename=output_file_name)
+            else:
+                image_bytes = buffer.read()
+                cmd = ['gifsicle', '-O3', '--colors', '256', '--lossy=30', '-o', '/dev/stdout', '--', '-']
+                optimized_image = subprocess.run(
+                    cmd, 
+                    input=image_bytes, 
+                    stdout=subprocess.PIPE, 
+                    stderr=subprocess.PIPE, 
+                    check=True
+                )
+                optimized_image_data = optimized_image.stdout
+                output_file = discord.File(fp=io.BytesIO(optimized_image_data), filename=output_file_name)
+
             await interaction.followup.send(file=output_file)
         else:
             logger.info('processing gif via API')
@@ -156,16 +166,13 @@ class MemeCog(commands.GroupCog, name="meme"):
                 await interaction.response.send_message("You do not have the required permissions to run this command", ephemeral=True)
             elif isinstance(error, discord.app_commands.errors.CommandOnCooldown):
                 await interaction.response.send_message(str(error), ephemeral=True)
-            return
-        
         elif hasattr(error, 'original'):
             if isinstance(error.original, UnidentifiedImageError):
                 await interaction.response.send_message("The content at the URL you provided could not be read as an image", ephemeral=True)
             elif isinstance(error.original, aiohttp.InvalidURL):
                 await interaction.response.send_message("The URL you provided was invalid", ephemeral=True)
-            return
-        
-        await interaction.response.send_message("There was an error while running the command", ephemeral=True)
+        else:
+            await interaction.response.send_message("There was an error while running the command", ephemeral=True)
         raise error
 
 
@@ -177,5 +184,6 @@ def create_output_file_name(text: str, ext: str):
     # https://stackoverflow.com/questions/13484726/safe-enough-8-character-short-unique-random-string
     alphabet = string.ascii_lowercase + string.digits
     random_str = ''.join(random.choices(alphabet, k=8))
-    file_name = f'{slugify(text)}-{random_str}.{ext}'
+    slugified_text = slugify(text, max_length=80, word_boundary=True)
+    file_name = f'{slugified_text}-{random_str}.{ext}'
     return file_name

@@ -1,6 +1,6 @@
-requires:
-- python >3.6
-- linux/wsl (for ssl with planetscale)
+development requires:
+- python >=3.9
+- linux/wsl for ssl with planetscale
 - gifsicle (optional, required only if locally running command `/meme gif`)
 
 `.env` requires secrets from:
