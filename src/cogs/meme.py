@@ -142,7 +142,7 @@ class MemeCog(commands.GroupCog, name="meme"):
         else:
             logger.info('processing gif via API')
             try:
-                buffer = await aws.invoke_image_processing_lambda(url, text, font.value, transparency)
+                buffer = await aws.invoke_image_processing_lambda(url, text, font.value, transparency, speedup)
                 output_file = discord.File(fp=buffer, filename=output_file_name)
                 await interaction.followup.send(file=output_file)
             except (

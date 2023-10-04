@@ -46,7 +46,7 @@ class LambdaClient():
 class APITimeoutError(Exception):
     pass
 
-async def invoke_image_processing_lambda(image_url: str, text: str, font: str, transparency: bool):
+async def invoke_image_processing_lambda(image_url: str, text: str, font: str, transparency: bool, speedup: float):
     if os.getenv('IMAGE_API_LAMBDA_NAME') is None:
         raise Exception('image API was called but lambda name was not set')
     
@@ -58,6 +58,9 @@ async def invoke_image_processing_lambda(image_url: str, text: str, font: str, t
         "text": text,
         "font": font,
     }
+
+    if speedup is not None:
+        event_parameters["speed"] = speedup
 
     response_payload = await lambda_client.invoke_async(event_parameters)
     lambda_response = json.loads(response_payload)
