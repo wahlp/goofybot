@@ -91,6 +91,43 @@ class PhrasesCog(commands.GroupCog, name="phrases"):
                 "No data found (You queried for a phrase that isn't registered)"
             )
 
+    @discord.app_commands.command(
+        description='Show leaderboards for a phrase'
+    )
+    @discord.app_commands.autocomplete(vanity_name=vanity_name_autocomplete)
+    async def leaderboards(
+        self,
+        interaction: discord.Interaction,
+        vanity_name: str,
+    ):
+        phrase, _ = self.find_phrase_tuple(vanity_name=vanity_name)
+        res = await self.bot.db_manager.get_phrase_leaderboards(phrase)
+        
+        if res is not None:
+            embed = self.format_leaderboards(res, vanity_name)
+            await interaction.response.send_message(embed=embed)
+        else:
+            await interaction.response.send_message('The query yielded no results :sob:')
+
+
+    def format_leaderboards(self, data: list[int, int], name: str):
+        lines = []
+        for user_id, count in data:
+            user = self.bot.get_user(user_id)
+            if user is None:
+                line = f'user with id {user_id}: {count}'
+            else:
+                line = f'{user.mention}: {count}'
+            lines.append(line)
+
+        msg = '\n'.join(lines)
+        embed = discord.Embed(
+            title=f'Leaderboards for phrase - {name}',
+            description=msg
+        )
+        return embed
+
+
     async def cog_app_command_error(self, interaction: discord.Interaction, error):
         if isinstance(error, discord.app_commands.errors.MissingPermissions):
             await interaction.response.send_message("You do not have the required permissions to run this command", ephemeral=True)

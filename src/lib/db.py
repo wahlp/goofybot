@@ -220,6 +220,23 @@ class Manager:
             res = await conn.execute(stmt)
             rows = await res.fetchall()
             return [x.as_tuple() for x in rows]
+        
+    async def get_phrase_leaderboards(self, phrase: str, limit: int = 10):
+        async with self.engine.acquire() as conn:
+            stmt = (
+                sa.select([
+                    self.tables.phrase_usage.c.member_id,
+                    self.tables.phrase_usage.c.count
+                ])
+                .where(self.tables.phrase_usage.c.phrase == phrase)
+                .order_by(self.tables.phrase_usage.c.count.desc())
+                .limit(limit)
+            )
+            res = await conn.execute(stmt)
+            rows = await res.fetchall()
+            
+            return [x.as_tuple() for x in rows]
+
 
     # === counters ===
 
