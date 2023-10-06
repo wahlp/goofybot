@@ -110,6 +110,7 @@ class MemeCog(commands.GroupCog, name="meme"):
         compression: bool = True,
         speedup: float = None,
         font: discord.app_commands.Choice[str] = None, 
+        compress_color: bool = True,
         transparency: bool = False
     ):  
         await interaction.response.defer()
@@ -134,14 +135,14 @@ class MemeCog(commands.GroupCog, name="meme"):
             else:
                 image_bytes = buffer.read()
                 logger.info(f'{len(image_bytes)} bytes image to be gifsicle-d')
-                optimized_image_data = compress_gif(image_bytes)
+                optimized_image_data = compress_gif(image_bytes, compress_color)
                 logger.info('uploading compressed file to discord')
                 output_file = discord.File(fp=io.BytesIO(optimized_image_data), filename=output_file_name)
             await interaction.followup.send(file=output_file)
         else:
             logger.info('processing gif via API')
             try:
-                buffer = await aws.invoke_image_processing_lambda(url, text, font.value, transparency, speedup)
+                buffer = await aws.invoke_image_processing_lambda(url, text, font.value, transparency, speedup, compress_color)
                 output_file = discord.File(fp=buffer, filename=output_file_name)
                 await interaction.followup.send(file=output_file)
             except (
@@ -184,8 +185,16 @@ def create_output_file_name(text: str, ext: str):
     return file_name
 
 
-def compress_gif(image_bytes: bytes):
-    cmd = ['gifsicle', '-O3', '--colors', '256', '--lossy=30', '-o', '/dev/stdout', '--', '-']
+def compress_gif(image_bytes: bytes, compress_color: bool = True):
+    cmd = [
+        './gifsicle', '-O3',
+        '--lossy=30',
+        '-o', '/dev/stdout', 
+        '--', '-'
+    ]
+    if compress_color:
+        cmd[2:2] = ['--colors', '256']
+
     optimized_image = subprocess.run(
         cmd, 
         input=image_bytes, 
