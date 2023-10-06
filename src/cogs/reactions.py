@@ -4,6 +4,7 @@ from discord.ext import commands
 from lib import emojilib
 from lib.custombot import CustomBot
 
+
 class Reactions(commands.GroupCog, name="reactions"):
     def __init__(self, bot: CustomBot):
         self.bot = bot

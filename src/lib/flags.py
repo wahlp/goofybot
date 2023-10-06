@@ -1,6 +1,7 @@
 import json
 import os
 
+
 def flagify(code: list[str]) -> str:
     """Convert letters to regional indicators"""
 

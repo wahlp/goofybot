@@ -2,6 +2,7 @@ import pytest
 
 from src.lib import emojilib
 
+
 @pytest.mark.parametrize(
     "test_input,expected", 
     [

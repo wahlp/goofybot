@@ -5,7 +5,6 @@ from enum import Enum
 
 from PIL import Image, ImageDraw, ImageFont, ImageSequence
 
-
 # todo: 
 # add unicode text support
 

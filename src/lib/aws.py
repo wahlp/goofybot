@@ -8,7 +8,6 @@ import os
 import boto3
 import botocore
 
-
 logger = logging.getLogger(__name__)
 
 class LambdaClient():

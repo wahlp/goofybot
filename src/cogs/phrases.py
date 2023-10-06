@@ -3,6 +3,7 @@ from discord.ext import commands
 
 from lib.custombot import CustomBot
 
+
 class PhrasesCog(commands.GroupCog, name="phrases"):
     def __init__(self, bot: CustomBot):
         self.bot = bot

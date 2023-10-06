@@ -2,8 +2,8 @@ import io
 import logging
 import os
 import random
-import subprocess
 import string
+import subprocess
 import traceback
 from typing import Optional
 
@@ -14,11 +14,9 @@ from discord.ext import commands
 from PIL import UnidentifiedImageError
 from slugify import slugify
 
-from lib import aws
-from lib import mememaker
+from lib import aws, mememaker
 from lib.custombot import CustomBot
 from lib.net import fetch_data
-
 
 logger = logging.getLogger(__name__)
 

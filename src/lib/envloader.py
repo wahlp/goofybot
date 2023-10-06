@@ -3,7 +3,6 @@ import os
 
 import boto3
 
-
 ssm = boto3.client('ssm')
 parameter_names = [
     ('/goofybot/discord_token', 'DISCORD_TOKEN'),

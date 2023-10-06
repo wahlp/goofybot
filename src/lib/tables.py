@@ -2,6 +2,7 @@ import os
 
 import sqlalchemy as sa
 
+
 class Tables:
     def __init__(self):
         metadata = sa.MetaData()
