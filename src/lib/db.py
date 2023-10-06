@@ -288,8 +288,7 @@ class Manager:
             stmt = (
                 sa.select([
                     sa.func.coalesce(self.tables.counter_incidents.c.instigator, self.tables.counter_incidents.c.reporter).label('contributor'),
-                    sa.func.count(),
-                    self.tables.counters.c.message
+                    sa.func.count()
                 ])
                 .select_from(j)
                 .where(self.tables.counter_incidents.c.name == name)

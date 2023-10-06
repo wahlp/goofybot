@@ -132,7 +132,7 @@ class CountersCog(commands.GroupCog, name="counters"):
 
     async def format_leaderboards(self, data: list[int, int], name: str):
         lines = []
-        for instigator_id, count, _ in data:
+        for instigator_id, count in data:
             if instigator_id is None:
                 line = f'no instigator: {count}'
             else:
