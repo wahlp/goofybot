@@ -44,6 +44,31 @@ class CustomBot(commands.Bot):
         for cog_name in get_cogs():
             await self.reload_extension(cog_name)
         logger.info('reloaded all cogs')
+        
+    async def format_leaderboards(
+        self, 
+        data: list[int, int], 
+        name: str, 
+        purpose: str,
+        missing_id_string: str = '',
+    ):
+        lines = []
+        for user_id, count in data:
+            if user_id is None:
+                line = missing_id_string.format(count=count)
+            else:
+                user = self.get_user(user_id)
+                if user is None:
+                    user = await self.bot.fetch_user(user_id)
+                line = f'{user.mention}: {count}'
+            lines.append(line)
+
+        msg = '\n'.join(lines)
+        embed = discord.Embed(
+            title=f'Leaderboards for {purpose} - {name}',
+            description=msg
+        )
+        return embed
 
 
 def get_cogs():

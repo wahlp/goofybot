@@ -125,29 +125,11 @@ class CountersCog(commands.GroupCog, name="counters"):
     ):
         res = await self.bot.db_manager.show_counter_leaderboards(name)
         if res is not None:
-            embed = await self.format_leaderboards(res, name)
+            embed = await self.bot.format_leaderboards(res, name, 'counter', 'no instigator: {count}')
             await interaction.response.send_message(embed=embed)
         else:
             await interaction.response.send_message('The query yielded no results :sob:')
 
-    async def format_leaderboards(self, data: list[int, int], name: str):
-        lines = []
-        for instigator_id, count in data:
-            if instigator_id is None:
-                line = f'no instigator: {count}'
-            else:
-                user = self.bot.get_user(instigator_id)
-                if user is None:
-                    user = await self.bot.fetch_user(instigator_id)
-                line = f'{user.mention}: {count}'
-            lines.append(line)
-
-        msg = '\n'.join(lines)
-        embed = discord.Embed(
-            title=f'Leaderboards for counter - {name}',
-            description=msg
-        )
-        return embed
 
 async def setup(bot: commands.Bot) -> None:
   await bot.add_cog(CountersCog(bot))
