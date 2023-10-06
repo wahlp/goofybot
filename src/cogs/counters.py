@@ -125,12 +125,12 @@ class CountersCog(commands.GroupCog, name="counters"):
     ):
         res = await self.bot.db_manager.show_counter_leaderboards(name)
         if res is not None:
-            embed = self.format_leaderboards(res, name)
+            embed = await self.format_leaderboards(res, name)
             await interaction.response.send_message(embed=embed)
         else:
             await interaction.response.send_message('The query yielded no results :sob:')
 
-    def format_leaderboards(self, data: list[int, int], name: str):
+    async def format_leaderboards(self, data: list[int, int], name: str):
         lines = []
         for instigator_id, count, _ in data:
             if instigator_id is None:
@@ -138,9 +138,8 @@ class CountersCog(commands.GroupCog, name="counters"):
             else:
                 user = self.bot.get_user(instigator_id)
                 if user is None:
-                    line = f'user with id {instigator_id}: {count}'
-                else:
-                    line = f'{user.mention}: {count}'
+                    user = await self.bot.fetch_user(instigator_id)
+                line = f'{user.mention}: {count}'
             lines.append(line)
 
         msg = '\n'.join(lines)

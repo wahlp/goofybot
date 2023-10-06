@@ -105,20 +105,19 @@ class PhrasesCog(commands.GroupCog, name="phrases"):
         res = await self.bot.db_manager.get_phrase_leaderboards(phrase)
         
         if res is not None:
-            embed = self.format_leaderboards(res, vanity_name)
+            embed = await self.format_leaderboards(res, vanity_name)
             await interaction.response.send_message(embed=embed)
         else:
             await interaction.response.send_message('The query yielded no results :sob:')
 
 
-    def format_leaderboards(self, data: list[int, int], name: str):
+    async def format_leaderboards(self, data: list[int, int], name: str):
         lines = []
         for user_id, count in data:
             user = self.bot.get_user(user_id)
             if user is None:
-                line = f'user with id {user_id}: {count}'
-            else:
-                line = f'{user.mention}: {count}'
+                user = await self.bot.fetch_user(user_id)
+            line = f'{user.mention}: {count}'
             lines.append(line)
 
         msg = '\n'.join(lines)
