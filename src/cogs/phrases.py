@@ -83,9 +83,10 @@ class PhrasesCog(commands.GroupCog, name="phrases"):
 
         if data:
             vanity_name, count = data[0]
-            await interaction.response.send_message(
-                f'{user.name} has said \"{vanity_name}\" a total of {count} times'
+            embed = discord.Embed(
+                description=f'{user.mention} has said \"{vanity_name}\" a total of {count} times'
             )
+            await interaction.response.send_message(embed=embed)
         else:
             await interaction.response.send_message(
                 "No data found (You queried for a phrase that isn't registered)"
