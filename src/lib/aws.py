@@ -10,7 +10,6 @@ import botocore
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 class LambdaClient():
     def __init__(self, session: boto3.Session, concurrency: int = 20):

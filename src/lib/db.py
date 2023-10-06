@@ -11,7 +11,6 @@ from sqlalchemy.dialects.mysql import insert
 from .tables import Tables
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 
 class Manager:

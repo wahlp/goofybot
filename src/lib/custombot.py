@@ -12,7 +12,6 @@ intents.message_content = True
 intents.members = True
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 class CustomBot(commands.Bot):
     def __init__(self):

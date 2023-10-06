@@ -12,20 +12,19 @@ from lib.envloader import load_env_vars
 logging.Formatter.converter = lambda *args: datetime.now(tz=timezone(timedelta(hours=8))).timetuple()
 logging.basicConfig(
     format='%(asctime)s %(levelname)-8s %(module)s: %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
+    datefmt='%Y-%m-%d %H:%M:%S',
+    level=logging.INFO
 )
-logger = logging.getLogger('discord')
-logger.setLevel(logging.INFO)
 
 if os.getenv('ENVIRONMENT') != 'LOCAL':
-    logger.info('loading parameter store values')
+    logging.info('calling parameter store for environment variables')
     load_env_vars()
 else:
-    logger.info('assuming environment variables are already set')
+    logging.info('using local environment variables')
 
 target_channels = os.getenv('TARGET_CHANNEL')
 if target_channels is None:
-    logger.warning('target_channels not found')
+    logging.warning('target_channels not found')
     bot_reaction_channel_whitelist = []
 else:
     bot_reaction_channel_whitelist = [int(x) for x in target_channels.split(',')]
@@ -37,7 +36,7 @@ bot = CustomBot()
 
 @bot.event
 async def on_ready():
-    logger.info(f'Logged in as {bot.user}')
+    logging.info(f'Logged in as {bot.user}')
 
 @bot.event
 async def setup_hook():
@@ -104,7 +103,7 @@ async def sync(ctx, mode: str = '*'):
         bot.tree.clear_commands(guild=None)
         synced_commands = await bot.tree.sync(guild=ctx.guild)
     
-    logger.info(f'synced commands: {len(synced_commands)}')
+    logging.info(f'synced commands: {len(synced_commands)}')
     await ctx.send('Command tree synced')
 
 @bot.command()
@@ -123,7 +122,7 @@ async def ping(ctx):
 
 @tasks.loop(hours=4)
 async def ping_db():
-    logger.info('pinging db')
+    logging.info('pinging db')
     await bot.db_manager.ping()
 
 

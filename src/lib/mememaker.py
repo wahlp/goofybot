@@ -10,7 +10,6 @@ from PIL import Image, ImageDraw, ImageFont, ImageSequence
 # add unicode text support
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 class FontOptions(Enum):
     default = ("Futura", "caption.otf")

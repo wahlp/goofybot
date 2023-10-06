@@ -6,7 +6,6 @@ from discord.ext import commands
 from lib.custombot import CustomBot
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 class CountersCog(commands.GroupCog, name="counters"):
     def __init__(self, bot: CustomBot):

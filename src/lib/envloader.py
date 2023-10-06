@@ -21,7 +21,6 @@ parameter_names = [
 ]
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 
 def load_env_vars():

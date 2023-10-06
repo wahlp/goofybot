@@ -21,7 +21,6 @@ from lib.net import fetch_data
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 font_choices = [
     discord.app_commands.Choice(name=font_file_name.value[0], value=font_file_name.name)
