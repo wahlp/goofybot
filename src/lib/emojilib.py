@@ -22,7 +22,8 @@ always_appear_mapping = {
     "forgor": "💀",
     "meow": "🐱",
     "cunny": "🦀",
-    "chicken": "🐔"
+    "chicken": "🐔",
+    "haram": "☪"
 }
 
 
