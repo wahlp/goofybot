@@ -14,9 +14,18 @@ class Reactions(commands.GroupCog, name="reactions"):
         name='stats',
         description='Show total reaction stats based on all users'
     )
-    async def stats_global(self, interaction: discord.Interaction, limit: int = 10):
+    @discord.app_commands.describe(
+        time_range='Number of days to search across'
+    )
+    async def stats_global(
+        self, 
+        interaction: discord.Interaction, 
+        time_range: int = 7,
+        limit: int = 10,
+    ):
         res = await self.bot.db_manager.get_stats(
-            limit=limit
+            time_range=time_range,
+            limit=limit,
         )
 
         if not res:
@@ -30,14 +39,24 @@ class Reactions(commands.GroupCog, name="reactions"):
         name='fav',
         description='Show a user\'s most used reactions'
     )
-    @discord.app_commands.describe(user='Leaving this empty field assumes you want to run this command for yourself')
-    async def stats_user(self, interaction: discord.Interaction, user: discord.User = None, limit: int = 10):
+    @discord.app_commands.describe(
+        user='Leaving this empty field assumes you want to run this command for yourself',
+        time_range='Number of days to search across'
+    )
+    async def stats_user(
+        self, 
+        interaction: discord.Interaction, 
+        user: discord.User = None, 
+        time_range: int = 7,
+        limit: int = 10
+    ):
         if user is None:
             user = interaction.user
             
         res = await self.bot.db_manager.get_stats(
             member_id=user.id,
-            limit=limit
+            time_range=time_range,
+            limit=limit,
         )
 
         if not res:

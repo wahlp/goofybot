@@ -97,7 +97,12 @@ class Manager:
         
         return '\n'.join(rows)
 
-    async def get_stats(self, member_id: int = None, limit: int = None):
+    async def get_stats(
+        self, 
+        member_id: int = None, 
+        limit: int = None, 
+        time_range: int = None
+    ):
         params = {}
 
         if member_id is not None:
@@ -111,6 +116,14 @@ class Manager:
             params['limit'] = limit
         else:
             limit_clause = ''
+
+        if time_range is not None:
+            time_clause = 'timestamp >= DATE_SUB(NOW(), INTERVAL :time_range DAY)'
+            if where_clause:
+                where_clause += f' AND {time_clause}'
+            else:
+                where_clause = f'WHERE {time_clause}'
+            params['time_range'] = time_range
 
         async with self.engine.acquire() as conn:
             stmt = sa.text(f'''
