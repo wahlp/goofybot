@@ -15,7 +15,8 @@ class Reactions(commands.GroupCog, name="reactions"):
         description='Show total reaction stats based on all users'
     )
     @discord.app_commands.describe(
-        time_range='Number of days to search across'
+        time_range='Number of days to search across',
+        limit='Number of top reactions to show',
     )
     async def stats_global(
         self, 
@@ -29,10 +30,19 @@ class Reactions(commands.GroupCog, name="reactions"):
         )
 
         if not res:
-            await interaction.response.send_message('No reactions recorded')
+            await interaction.response.send_message(
+                embed=discord.Embed(
+                    description=f'No reactions recorded in the last {time_range} days'
+                )
+            )
         else:    
             msg = format_stats(interaction, res)
-            await interaction.response.send_message(msg)
+            embed = create_embed(
+                user_name='everyone',
+                time_range=time_range,
+                description=msg
+            )
+            await interaction.response.send_message(embed=embed)
 
 
     @discord.app_commands.command(
@@ -41,7 +51,8 @@ class Reactions(commands.GroupCog, name="reactions"):
     )
     @discord.app_commands.describe(
         user='Leaving this empty field assumes you want to run this command for yourself',
-        time_range='Number of days to search across'
+        time_range='Number of days to search across',
+        limit='Number of top reactions to show',
     )
     async def stats_user(
         self, 
@@ -60,10 +71,19 @@ class Reactions(commands.GroupCog, name="reactions"):
         )
 
         if not res:
-            await interaction.response.send_message('No reactions recorded for that user')
+            await interaction.response.send_message(
+                embed=discord.Embed(
+                    description=f'No reactions recorded for {user.mention} in the last {time_range} days'
+                )
+            )
         else:    
             msg = format_stats(interaction, res)
-            await interaction.response.send_message(msg)
+            embed = create_embed(
+                user_name=user.name,
+                time_range=time_range,
+                description=msg
+            )
+            await interaction.response.send_message(embed=embed)
 
 
 async def setup(bot: commands.Bot) -> None:
@@ -81,3 +101,10 @@ def format_stats(ctx, lst: list[tuple[str, int]]):
         lines.append(f'{parsed_emoji}: {count}')
 
     return '\n'.join(lines)
+
+def create_embed(user_name: str, time_range: int, description: str):
+    embed = discord.Embed(
+        title=f'Top reactions:\n{user_name}, last {time_range} days',
+        description=description
+    )
+    return embed
