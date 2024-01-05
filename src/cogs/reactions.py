@@ -36,13 +36,9 @@ class Reactions(commands.GroupCog, name="reactions"):
                 )
             )
         else:    
-            msg = format_stats(interaction, res)
-            embed = create_embed(
-                user_name='everyone',
-                time_range=time_range,
-                description=msg
-            )
-            await interaction.response.send_message(embed=embed)
+            stats = format_stats(interaction, res)
+            msg = f'Top reactions, last {time_range} days\n' + stats
+            await interaction.response.send_message(msg)
 
 
     @discord.app_commands.command(
@@ -77,13 +73,9 @@ class Reactions(commands.GroupCog, name="reactions"):
                 )
             )
         else:    
-            msg = format_stats(interaction, res)
-            embed = create_embed(
-                user_name=user.name,
-                time_range=time_range,
-                description=msg
-            )
-            await interaction.response.send_message(embed=embed)
+            stats = format_stats(interaction, res)
+            msg = f'Top reactions, last {time_range} days\n' + stats
+            await interaction.response.send_message(msg)
 
 
 async def setup(bot: commands.Bot) -> None:
@@ -101,10 +93,3 @@ def format_stats(ctx, lst: list[tuple[str, int]]):
         lines.append(f'{parsed_emoji}: {count}')
 
     return '\n'.join(lines)
-
-def create_embed(user_name: str, time_range: int, description: str):
-    embed = discord.Embed(
-        title=f'Top reactions:\n{user_name}, last {time_range} days',
-        description=description
-    )
-    return embed
