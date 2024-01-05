@@ -10,11 +10,12 @@ from typing import Optional
 import aiohttp
 import botocore
 import discord
+import mememaker
 from discord.ext import commands
 from PIL import UnidentifiedImageError
 from slugify import slugify
 
-from lib import aws, mememaker
+from lib import aws
 from lib.custombot import CustomBot
 from lib.net import fetch_data
 
@@ -106,7 +107,7 @@ class MemeCog(commands.GroupCog, name="meme"):
         url: str, 
         text: str, 
         compression: bool = True,
-        speedup: float = None,
+        speedup: float = 1.0,
         font: discord.app_commands.Choice[str] = None, 
         compress_color: bool = True,
         transparency: bool = False
