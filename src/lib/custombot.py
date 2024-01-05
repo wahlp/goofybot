@@ -57,8 +57,11 @@ class CustomBot(commands.Bot):
             else:
                 user = self.get_user(user_id)
                 if user is None:
-                    user = await self.bot.fetch_user(user_id)
-                line = f'{user.mention}: {count}'
+                    # can't lookup this user, they left the server
+                    user_name = 'user who left'
+                else:
+                    user_name = user.mention
+                line = f'{user_name}: {count}'
             lines.append(line)
 
         msg = '\n'.join(lines)
