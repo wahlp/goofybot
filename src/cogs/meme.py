@@ -58,8 +58,12 @@ class MemeCog(commands.GroupCog, name="meme"):
         if font is None:
             font = font_choices[0]
 
-        image_data = await fetch_data(url)
-        buffer = mememaker.add_text_to_image(image_data, text, font.value, transparency)
+        if os.getenv('ENVIRONMENT') == 'LOCAL':
+            image_data = await fetch_data(url)
+            buffer = mememaker.add_text_to_image(image_data, text, font.value, transparency)
+        else:
+            buffer = await aws.invoke_image_processing_lambda('png', url, text, font.value, transparency)
+        
         output_file_name = create_output_file_name(text, ext='png')
         output_file = discord.File(fp=buffer, filename=output_file_name)
         await interaction.followup.send(file=output_file)
@@ -146,7 +150,7 @@ class MemeCog(commands.GroupCog, name="meme"):
         else:
             logger.info('processing gif via API')
             try:
-                buffer = await aws.invoke_image_processing_lambda(url, text, font.value, transparency, speedup, compress_color)
+                buffer = await aws.invoke_image_processing_lambda('gif', url, text, font.value, transparency, speedup, compress_color)
                 output_file = discord.File(fp=buffer, filename=output_file_name)
                 await interaction.followup.send(file=output_file)
             except (

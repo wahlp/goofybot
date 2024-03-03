@@ -45,12 +45,14 @@ class APITimeoutError(Exception):
     pass
 
 async def invoke_image_processing_lambda(
+    image_type: str,
     image_url: str, 
     text: str, 
     font: str, 
     transparency: bool, 
-    speedup: float,
-    compress_color: bool
+    speedup: float = None,
+    compress_color: bool = None,
+    compress_file: bool = None
 ):
     if os.getenv('IMAGE_API_LAMBDA_NAME') is None:
         raise Exception('image API was called but lambda name was not set')
@@ -59,21 +61,26 @@ async def invoke_image_processing_lambda(
     lambda_client = LambdaClient(session)
 
     event_parameters = {
+        "image_type": image_type,
         "url": image_url,
         "text": text,
         "font": font,
-        "compress_color": compress_color,
+        "transparency": transparency
     }
 
     if speedup is not None:
         event_parameters["speed"] = speedup
+    if compress_color is not None:
+        event_parameters["compress_color"] = compress_color
+    if compress_file is not None:
+        event_parameters["compress_file"] = compress_file
 
     response_payload = await lambda_client.invoke_async(event_parameters)
     lambda_response = json.loads(response_payload)
     logger.info(lambda_response)
 
     if 'body' not in lambda_response:
-        raise APITimeoutError('The lambda timed out before it could process the GIF')
+        raise APITimeoutError(f'The lambda timed out before it could process the {image_type}')
 
     bucket_name = lambda_response['body']['bucket_name']
     object_key = lambda_response['body']['file_name']
