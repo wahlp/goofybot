@@ -37,7 +37,9 @@ class MemeCog(commands.GroupCog, name="meme"):
     )
     @discord.app_commands.describe(
         url='The URL of the input image',
-        transparency='Specifies if you want to preserve transparency (Optional, defaults to False)'
+        text='Caption for the output gif',
+        font='Font for the text',
+        transparency='Preserve transparency (defaults to False)',
     )
     @discord.app_commands.choices(
         font=font_choices
@@ -93,9 +95,12 @@ class MemeCog(commands.GroupCog, name="meme"):
     )
     @discord.app_commands.describe(
         url='The URL of the input gif',
-        compression='Compress the gif for smaller file size at the cost of more processing time (Optional, defaults to True)',
+        text='Caption for the output gif',
+        compression='Smaller file size but needs more processing time (defaults to True)',
         speedup='Multiplies the speed of the output gif',
-        transparency='Specifies if you want to preserve transparency (Optional, defaults to False)'
+        font='Font for the text',
+        compress_color='Smaller file size but fewer colors in the output (defaults to True)',
+        transparency='Preserve transparency (defaults to False)',
     )
     @discord.app_commands.choices(
         font=font_choices

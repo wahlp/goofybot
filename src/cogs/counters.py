@@ -65,7 +65,7 @@ class CountersCog(commands.GroupCog, name="counters"):
     )
     @discord.app_commands.describe(
         name='Name of the counter',
-        instigator='The @ of the person who caused the counter to go up (Optional, defaults to nobody)'
+        instigator='The @ of the person who caused the counter to go up (defaults to nobody)'
     )
     @discord.app_commands.autocomplete(name=name_autocomplete)
     async def increment(
